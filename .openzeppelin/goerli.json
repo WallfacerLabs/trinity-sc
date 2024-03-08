@@ -950,22 +950,22 @@
             "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "adminContract",
             "type": "t_contract(IAdminContract)14209",
-            "src": "contracts/Dependencies/GravitaBase.sol:28"
+            "src": "contracts/Dependencies/TrinityBase.sol:28"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "activePool",
             "type": "t_contract(IActivePool)13906",
-            "src": "contracts/Dependencies/GravitaBase.sol:29"
+            "src": "contracts/Dependencies/TrinityBase.sol:29"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "defaultPool",
             "type": "t_contract(IDefaultPool)14578",
-            "src": "contracts/Dependencies/GravitaBase.sol:30"
+            "src": "contracts/Dependencies/TrinityBase.sol:30"
           },
           {
             "contract": "BorrowerOperations",
@@ -1715,22 +1715,22 @@
             "src": "contracts/Dependencies/ReentrancyGuardUpgradeable.sol:58"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "adminContract",
             "type": "t_contract(IAdminContract)14209",
-            "src": "contracts/Dependencies/GravitaBase.sol:28"
+            "src": "contracts/Dependencies/TrinityBase.sol:28"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "activePool",
             "type": "t_contract(IActivePool)13906",
-            "src": "contracts/Dependencies/GravitaBase.sol:29"
+            "src": "contracts/Dependencies/TrinityBase.sol:29"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "defaultPool",
             "type": "t_contract(IDefaultPool)14578",
-            "src": "contracts/Dependencies/GravitaBase.sol:30"
+            "src": "contracts/Dependencies/TrinityBase.sol:30"
           },
           {
             "contract": "PoolBase",
@@ -1885,7 +1885,7 @@
             "label": "uint256"
           },
           "t_struct(Colls)9652_storage": {
-            "label": "struct GravitaBase.Colls",
+            "label": "struct TrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -1907,7 +1907,7 @@
             "label": "uint256[]"
           },
           "t_mapping(t_address,t_struct(Colls)9652_storage)": {
-            "label": "mapping(address => struct GravitaBase.Colls)"
+            "label": "mapping(address => struct TrinityBase.Colls)"
           },
           "t_mapping(t_address,t_uint256)": {
             "label": "mapping(address => uint256)"
@@ -2006,22 +2006,22 @@
             "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "adminContract",
             "type": "t_contract(IAdminContract)14209",
-            "src": "contracts/Dependencies/GravitaBase.sol:28"
+            "src": "contracts/Dependencies/TrinityBase.sol:28"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "activePool",
             "type": "t_contract(IActivePool)13906",
-            "src": "contracts/Dependencies/GravitaBase.sol:29"
+            "src": "contracts/Dependencies/TrinityBase.sol:29"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "defaultPool",
             "type": "t_contract(IDefaultPool)14578",
-            "src": "contracts/Dependencies/GravitaBase.sol:30"
+            "src": "contracts/Dependencies/TrinityBase.sol:30"
           },
           {
             "contract": "VesselManager",
@@ -2311,22 +2311,22 @@
             "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "adminContract",
             "type": "t_contract(IAdminContract)14209",
-            "src": "contracts/Dependencies/GravitaBase.sol:28"
+            "src": "contracts/Dependencies/TrinityBase.sol:28"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "activePool",
             "type": "t_contract(IActivePool)13906",
-            "src": "contracts/Dependencies/GravitaBase.sol:29"
+            "src": "contracts/Dependencies/TrinityBase.sol:29"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "defaultPool",
             "type": "t_contract(IDefaultPool)14578",
-            "src": "contracts/Dependencies/GravitaBase.sol:30"
+            "src": "contracts/Dependencies/TrinityBase.sol:30"
           },
           {
             "contract": "VesselManagerOperations",
@@ -2886,28 +2886,28 @@
             "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:94"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "adminContract",
             "type": "t_contract(IAdminContract)12869",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:21"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:21"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "activePool",
             "type": "t_contract(IActivePool)12577",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:22"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:22"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "defaultPool",
             "type": "t_contract(IDefaultPool)13192",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:23"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:23"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "__gap",
             "type": "t_array(t_uint256)47_storage",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:30"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:30"
           },
           {
             "contract": "BorrowerOperations",
@@ -3619,28 +3619,28 @@
             "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:94"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "adminContract",
             "type": "t_contract(IAdminContract)12869",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:21"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:21"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "activePool",
             "type": "t_contract(IActivePool)12577",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:22"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:22"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "defaultPool",
             "type": "t_contract(IDefaultPool)13192",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:23"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:23"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "__gap",
             "type": "t_array(t_uint256)47_storage",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:30"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:30"
           },
           {
             "contract": "StabilityPool",
@@ -3765,7 +3765,7 @@
             "label": "uint256"
           },
           "t_struct(Colls)13504_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -3892,28 +3892,28 @@
             "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:94"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "adminContract",
             "type": "t_contract(IAdminContract)12869",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:21"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:21"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "activePool",
             "type": "t_contract(IActivePool)12577",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:22"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:22"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "defaultPool",
             "type": "t_contract(IDefaultPool)13192",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:23"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:23"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "__gap",
             "type": "t_array(t_uint256)47_storage",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:30"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:30"
           },
           {
             "contract": "VesselManager",
@@ -4193,28 +4193,28 @@
             "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:94"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "adminContract",
             "type": "t_contract(IAdminContract)12869",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:21"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:21"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "activePool",
             "type": "t_contract(IActivePool)12577",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:22"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:22"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "defaultPool",
             "type": "t_contract(IDefaultPool)13192",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:23"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:23"
           },
           {
-            "contract": "GravitaBase",
+            "contract": "TrinityBase",
             "label": "__gap",
             "type": "t_array(t_uint256)47_storage",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:30"
+            "src": "contracts\\Dependencies\\TrinityBase.sol:30"
           },
           {
             "contract": "VesselManagerOperations",
@@ -4827,32 +4827,32 @@
             "offset": 0,
             "slot": "151",
             "type": "t_contract(IAdminContract)2105",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:20"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:20"
           },
           {
             "label": "activePool",
             "offset": 0,
             "slot": "152",
             "type": "t_contract(IActivePool)1819",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:21"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:21"
           },
           {
             "label": "defaultPool",
             "offset": 0,
             "slot": "153",
             "type": "t_contract(IDefaultPool)2428",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:22"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:22"
           },
           {
             "label": "__gap",
             "offset": 0,
             "slot": "154",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:29"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:29"
           },
           {
             "label": "borrowerOperations",
@@ -5073,7 +5073,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)2603_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -5193,32 +5193,32 @@
             "offset": 0,
             "slot": "101",
             "type": "t_contract(IAdminContract)2105",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:20"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:20"
           },
           {
             "label": "activePool",
             "offset": 0,
             "slot": "102",
             "type": "t_contract(IActivePool)1819",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:21"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:21"
           },
           {
             "label": "defaultPool",
             "offset": 0,
             "slot": "103",
             "type": "t_contract(IDefaultPool)2428",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:22"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:22"
           },
           {
             "label": "__gap",
             "offset": 0,
             "slot": "104",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:29"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:29"
           },
           {
             "label": "borrowerOperations",
@@ -5594,32 +5594,32 @@
             "offset": 0,
             "slot": "101",
             "type": "t_contract(IAdminContract)13761",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:20"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:20"
           },
           {
             "label": "activePool",
             "offset": 0,
             "slot": "102",
             "type": "t_contract(IActivePool)13475",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:21"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:21"
           },
           {
             "label": "defaultPool",
             "offset": 0,
             "slot": "103",
             "type": "t_contract(IDefaultPool)14084",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:22"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:22"
           },
           {
             "label": "__gap",
             "offset": 0,
             "slot": "104",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:29"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:29"
           },
           {
             "label": "vesselManager",
@@ -6108,8 +6108,8 @@
             "offset": 0,
             "slot": "101",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "_status",
@@ -6956,8 +6956,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "totalDebtTokenDeposits",
@@ -7106,7 +7106,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)9387_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -7258,8 +7258,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "baseRate",
@@ -7579,8 +7579,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           }
         ],
         "types": {
@@ -7997,8 +7997,8 @@
             "offset": 0,
             "slot": "101",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "_status",
@@ -9143,8 +9143,8 @@
             "offset": 0,
             "slot": "101",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "_status",
@@ -9991,8 +9991,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "totalDebtTokenDeposits",
@@ -10141,7 +10141,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)9415_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -10293,8 +10293,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "baseRate",
@@ -10614,8 +10614,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           }
         ],
         "types": {
@@ -11032,8 +11032,8 @@
             "offset": 0,
             "slot": "101",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "_status",
@@ -11880,8 +11880,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "totalDebtTokenDeposits",
@@ -12030,7 +12030,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)9370_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -12182,8 +12182,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           },
           {
             "label": "baseRate",
@@ -12503,8 +12503,8 @@
             "offset": 0,
             "slot": "251",
             "type": "t_array(t_uint256)47_storage",
-            "contract": "GravitaBase",
-            "src": "contracts\\Dependencies\\GravitaBase.sol:26"
+            "contract": "TrinityBase",
+            "src": "contracts\\Dependencies\\TrinityBase.sol:26"
           }
         ],
         "types": {
@@ -12773,7 +12773,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)9335_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -13075,7 +13075,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)9335_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -13377,7 +13377,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)8208_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -16156,7 +16156,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)13876_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -19748,7 +19748,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)13693_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -23550,7 +23550,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)13695_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -26585,7 +26585,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)6147_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -30141,7 +30141,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)13883_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",
@@ -31713,7 +31713,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)8591_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",

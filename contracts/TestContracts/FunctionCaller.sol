@@ -4,10 +4,10 @@ pragma solidity ^0.8.19;
 import "../Interfaces/IVesselManager.sol";
 import "../Interfaces/ISortedVessels.sol";
 import "../Interfaces/IPriceFeed.sol";
-import "../Dependencies/GravitaMath.sol";
+import "../Dependencies/TrinityMath.sol";
 
-/* Wrapper contract - used for calculating gas of read-only and internal functions. 
-Not part of the Gravita application. */
+/* Wrapper contract - used for calculating gas of read-only and internal functions.
+Not part of the Trinity application. */
 contract FunctionCaller {
 	IVesselManager vesselManager;
 	address public vesselManagerAddress;

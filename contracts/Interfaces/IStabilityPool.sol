@@ -10,7 +10,6 @@ interface IStabilityPool is IDeposit {
 	struct Snapshots {
 		mapping(address => uint256) S;
 		uint256 P;
-		uint256 G;
 		uint128 scale;
 		uint128 epoch;
 	}
@@ -18,12 +17,11 @@ interface IStabilityPool is IDeposit {
 	// --- Events ---
 
 	event CommunityIssuanceAddressChanged(address newAddress);
-	event DepositSnapshotUpdated(address indexed _depositor, uint256 _P, uint256 _G);
-	event SystemSnapshotUpdated(uint256 _P, uint256 _G);
+	event DepositSnapshotUpdated(address indexed _depositor, uint256 _P);
+	event SystemSnapshotUpdated(uint256 _P);
 
 	event AssetSent(address _asset, address _to, uint256 _amount);
 	event GainsWithdrawn(address indexed _depositor, address[] _collaterals, uint256[] _amounts, uint256 _debtTokenLoss);
-	event GRVTPaidToDepositor(address indexed _depositor, uint256 _GRVT);
 	event StabilityPoolAssetBalanceUpdated(address _asset, uint256 _newBalance);
 	event StabilityPoolDebtTokenBalanceUpdated(uint256 _newBalance);
 	event StakeChanged(uint256 _newSystemStake, address _depositor);
@@ -31,7 +29,6 @@ interface IStabilityPool is IDeposit {
 
 	event P_Updated(uint256 _P);
 	event S_Updated(address _asset, uint256 _S, uint128 _epoch, uint128 _scale);
-	event G_Updated(uint256 _G, uint128 _epoch, uint128 _scale);
 	event EpochUpdated(uint128 _currentEpoch);
 	event ScaleUpdated(uint128 _currentScale);
 
@@ -50,8 +47,7 @@ interface IStabilityPool is IDeposit {
 	 * Initial checks:
 	 * - _amount is not zero
 	 * ---
-	 * - Triggers a GRVT issuance, based on time passed since the last issuance. The GRVT issuance is shared between *all* depositors.
-	 * - Sends depositor's accumulated gains (GRVT, assets) to depositor
+	 * - Sends depositor's accumulated gains (assets) to depositor
 	 */
 	function provideToSP(uint256 _amount, address[] calldata _assets) external;
 
@@ -60,8 +56,7 @@ interface IStabilityPool is IDeposit {
 	 * - _amount is zero or there are no under collateralized vessels left in the system
 	 * - User has a non zero deposit
 	 * ---
-	 * - Triggers a GRVT issuance, based on time passed since the last issuance. The GRVT issuance is shared between *all* depositors.
-	 * - Sends all depositor's accumulated gains (GRVT, assets) to depositor
+	 * - Sends all depositor's accumulated gains (assets) to depositor
 	 * - Decreases deposit's stake, and takes new snapshots.
 	 *
 	 * If _amount > userDeposit, the user withdraws all of their compounded deposit.
@@ -90,11 +85,6 @@ interface IStabilityPool is IDeposit {
 		address _depositor,
 		address[] calldata _assets
 	) external view returns (address[] memory, uint256[] memory);
-
-	/*
-	 * Calculate the GRVT gain earned by a deposit since its last snapshots were taken.
-	 */
-	function getDepositorGRVTGain(address _depositor) external view returns (uint256);
 
 	/*
 	 * Return the user's compounded deposits.

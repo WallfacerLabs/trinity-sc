@@ -6,15 +6,14 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./Interfaces/IVesselManager.sol";
-import "./Dependencies/GravitaBase.sol";
+import "./Dependencies/TrinityBase.sol";
 import "./Dependencies/SafetyTransfer.sol";
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/IDebtToken.sol";
-import "./Interfaces/IFeeCollector.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Addresses.sol";
 
-contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgradeable, IBorrowerOperations {
+contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgradeable, IBorrowerOperations {
 	using SafeERC20Upgradeable for IERC20Upgradeable;
 
 	string public constant NAME = "BorrowerOperations";
@@ -25,6 +24,8 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
     Used to hold, return and assign variables inside a function, in order to avoid the error:
     "CompilerError: Stack too deep". */
+
+	mapping(address asset => mapping(address borrower => uint256)) public lastFeeCollectionEpoch;
 
 	struct LocalVariables_adjustVessel {
 		address asset;
@@ -83,7 +84,7 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		vars.netDebt = _debtTokenAmount;
 
 		if (!isRecoveryMode) {
-			vars.debtTokenFee = _triggerBorrowingFee(vars.asset, _debtTokenAmount);
+			vars.debtTokenFee = _triggerBorrowingFee(vars.asset, msg.sender, _debtTokenAmount);
 			vars.netDebt = vars.netDebt + vars.debtTokenFee;
 		}
 		_requireAtLeastMinNetDebt(vars.asset, vars.netDebt);
@@ -93,8 +94,8 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		vars.compositeDebt = vars.netDebt + gasCompensation;
 		require(vars.compositeDebt != 0, "compositeDebt cannot be 0");
 
-		vars.ICR = GravitaMath._computeCR(_assetAmount, vars.compositeDebt, vars.price);
-		vars.NICR = GravitaMath._computeNominalCR(_assetAmount, vars.compositeDebt);
+		vars.ICR = TrinityMath._computeCR(_assetAmount, vars.compositeDebt, vars.price);
+		vars.NICR = TrinityMath._computeNominalCR(_assetAmount, vars.compositeDebt);
 
 		if (isRecoveryMode) {
 			_requireICRisAboveCCR(vars.asset, vars.ICR);
@@ -132,7 +133,6 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 			vars.stake,
 			BorrowerOperation.openVessel
 		);
-		emit BorrowingFeePaid(vars.asset, msg.sender, vars.debtTokenFee);
 	}
 
 	// Send collateral to a vessel
@@ -209,6 +209,8 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		address _upperHint,
 		address _lowerHint
 	) internal {
+		_collectVesselFee(_asset, _borrower);
+
 		LocalVariables_adjustVessel memory vars;
 		vars.asset = _asset;
 		vars.price = IPriceFeed(priceFeed).fetchPrice(vars.asset);
@@ -233,7 +235,7 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 		// If the adjustment incorporates a debt increase and system is in Normal Mode, then trigger a borrowing fee
 		if (_isDebtIncrease && !isRecoveryMode) {
-			vars.debtTokenFee = _triggerBorrowingFee(vars.asset, _debtTokenChange);
+			vars.debtTokenFee = _triggerBorrowingFee(vars.asset, msg.sender, _debtTokenChange);
 			vars.netDebtChange = vars.netDebtChange + vars.debtTokenFee; // The raw debt change includes the fee
 		}
 
@@ -241,7 +243,7 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		vars.coll = IVesselManager(vesselManager).getVesselColl(vars.asset, _borrower);
 
 		// Get the vessel's old ICR before the adjustment, and what its new ICR will be after the adjustment
-		vars.oldICR = GravitaMath._computeCR(vars.coll, vars.debt, vars.price);
+		vars.oldICR = TrinityMath._computeCR(vars.coll, vars.debt, vars.price);
 		vars.newICR = _getNewICRFromVesselChange(
 			vars.coll,
 			vars.debt,
@@ -285,7 +287,6 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		ISortedVessels(sortedVessels).reInsert(vars.asset, _borrower, newNICR, _upperHint, _lowerHint);
 
 		emit VesselUpdated(vars.asset, _borrower, vars.newDebt, vars.newColl, vars.stake, BorrowerOperation.adjustVessel);
-		emit BorrowingFeePaid(vars.asset, msg.sender, vars.debtTokenFee);
 
 		// Use the unmodified _debtTokenChange here, as we don't send the fee to the user
 		_moveTokensFromAdjustment(
@@ -310,8 +311,7 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		uint256 debt = IVesselManager(vesselManager).getVesselDebt(_asset, msg.sender);
 
 		uint256 gasCompensation = IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
-		uint256 refund = IFeeCollector(feeCollector).simulateRefund(msg.sender, _asset, 1 ether);
-		uint256 netDebt = debt - gasCompensation - refund;
+		uint256 netDebt = debt - gasCompensation;
 
 		_requireSufficientDebtTokenBalance(msg.sender, netDebt);
 
@@ -324,16 +324,17 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		emit VesselUpdated(_asset, msg.sender, 0, 0, 0, BorrowerOperation.closeVessel);
 
 		// Burn the repaid debt tokens from the user's balance and the gas compensation from the Gas Pool
-		_repayDebtTokens(_asset, msg.sender, netDebt, refund);
+		_repayDebtTokens(_asset, msg.sender, netDebt);
 		if (gasCompensation != 0) {
-			_repayDebtTokens(_asset, gasPoolAddress, gasCompensation, 0);
+			_repayDebtTokens(_asset, gasPoolAddress, gasCompensation);
 		}
-
-		// Signal to the fee collector that debt has been paid in full
-		IFeeCollector(feeCollector).closeDebt(msg.sender, _asset);
 
 		// Send the collateral back to the user
 		IActivePool(activePool).sendAsset(_asset, msg.sender, coll);
+	}
+
+	function collectVesselFee(address _asset, address _borrower) external {
+		_collectVesselFee(_asset, _borrower);
 	}
 
 	/**
@@ -344,11 +345,43 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		ICollSurplusPool(collSurplusPool).claimColl(_asset, msg.sender);
 	}
 
-	function _triggerBorrowingFee(address _asset, uint256 _debtTokenAmount) internal returns (uint256) {
+	function _triggerBorrowingFee(address _asset, address _borrower, uint256 _debtTokenAmount) internal returns (uint256) {
 		uint256 debtTokenFee = IVesselManager(vesselManager).getBorrowingFee(_asset, _debtTokenAmount);
-		IDebtToken(debtToken).mint(_asset, feeCollector, debtTokenFee);
-		IFeeCollector(feeCollector).increaseDebt(msg.sender, _asset, debtTokenFee);
+		IDebtToken(debtToken).mint(_asset, treasuryAddress, debtTokenFee);
+		_updateVesselEpoch(_asset, _borrower);
+		emit BorrowingFeePaid(_asset, _borrower, debtTokenFee);
 		return debtTokenFee;
+	}
+
+	function _collectVesselFee(
+		address _asset,
+		address _borrower
+	) internal {
+		if(_vesselAlreadyCollected(_asset, _borrower)) {
+			return;
+		}
+
+		IVesselManager(vesselManager).applyPendingRewards(_asset, _borrower);
+		uint256 debt = IVesselManager(vesselManager).getVesselDebt(_asset, _borrower);
+
+		uint256 debtTokenFee = _triggerBorrowingFee(_asset, _borrower, debt);
+		IVesselManager(vesselManager).increaseVesselDebt(_asset, _borrower, debtTokenFee);
+	}
+
+	function _getCurrentEpoch() internal view returns (uint256) {
+		return block.timestamp - (block.timestamp % 7 days);
+	}
+
+	function _vesselAlreadyCollected(address _asset, address _borrower) internal view returns (bool){
+		return lastFeeCollectionEpoch[_asset][_borrower] == _getCurrentEpoch();
+	}
+
+	function _updateVesselEpoch(address _asset, address _borrower) internal {
+		uint256 currentEpoch = _getCurrentEpoch();
+		if (lastFeeCollectionEpoch[_asset][_borrower] < currentEpoch) {
+			lastFeeCollectionEpoch[_asset][_borrower] = currentEpoch;
+			emit VesselEpochUpdated(_asset, _borrower, currentEpoch);
+		}
 	}
 
 	function _getUSDValue(uint256 _coll, uint256 _price) internal pure returns (uint256) {
@@ -398,7 +431,7 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		if (_isDebtIncrease) {
 			_withdrawDebtTokens(_asset, _borrower, _debtTokenChange, _netDebtChange);
 		} else {
-			_repayDebtTokens(_asset, _borrower, _debtTokenChange, 0);
+			_repayDebtTokens(_asset, _borrower, _debtTokenChange);
 		}
 		if (_isCollIncrease) {
 			_activePoolAddColl(_asset, _collChange);
@@ -433,9 +466,9 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 	}
 
 	// Burn the specified amount of debt tokens from _account and decreases the total active debt
-	function _repayDebtTokens(address _asset, address _account, uint256 _debtTokenAmount, uint256 _refund) internal {
+	function _repayDebtTokens(address _asset, address _account, uint256 _debtTokenAmount) internal {
 		/// @dev the borrowing fee partial refund is accounted for when decreasing the debt, as it was included when vessel was opened
-		IActivePool(activePool).decreaseDebt(_asset, _debtTokenAmount + _refund);
+		IActivePool(activePool).decreaseDebt(_asset, _debtTokenAmount);
 		/// @dev the borrowing fee partial refund is not burned here, as it has already been burned by the FeeCollector
 		IDebtToken(debtToken).burn(_account, _debtTokenAmount);
 	}
@@ -586,7 +619,7 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 			_isDebtIncrease
 		);
 
-		uint256 newNICR = GravitaMath._computeNominalCR(newColl, newDebt);
+		uint256 newNICR = TrinityMath._computeNominalCR(newColl, newDebt);
 		return newNICR;
 	}
 
@@ -609,7 +642,7 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 			_isDebtIncrease
 		);
 
-		uint256 newICR = GravitaMath._computeCR(newColl, newDebt, _price);
+		uint256 newICR = TrinityMath._computeCR(newColl, newDebt, _price);
 		return newICR;
 	}
 
@@ -644,7 +677,7 @@ contract BorrowerOperations is GravitaBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		totalColl = _isCollIncrease ? totalColl + _collChange : totalColl - _collChange;
 		totalDebt = _isDebtIncrease ? totalDebt + _debtChange : totalDebt - _debtChange;
 
-		uint256 newTCR = GravitaMath._computeCR(totalColl, totalDebt, _price);
+		uint256 newTCR = TrinityMath._computeCR(totalColl, totalDebt, _price);
 		return newTCR;
 	}
 

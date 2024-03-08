@@ -30,7 +30,7 @@ contract ActivePool is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
 	modifier callerIsBorrowerOpsOrDefaultPool() {
 		require(
 			msg.sender == borrowerOperations || msg.sender == defaultPool,
-			"ActivePool: Caller is not an authorized Gravita contract"
+			"ActivePool: Caller is not an authorized Trinity contract"
 		);
 		_;
 	}
@@ -38,7 +38,7 @@ contract ActivePool is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
 	modifier callerIsBorrowerOpsOrVesselMgr() {
 		require(
 			msg.sender == borrowerOperations || msg.sender == vesselManager,
-			"ActivePool: Caller is not an authorized Gravita contract"
+			"ActivePool: Caller is not an authorized Trinity contract"
 		);
 		_;
 	}
@@ -46,7 +46,7 @@ contract ActivePool is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
 	modifier callerIsBorrowerOpsOrStabilityPoolOrVesselMgr() {
 		require(
 			msg.sender == borrowerOperations || msg.sender == stabilityPool || msg.sender == vesselManager,
-			"ActivePool: Caller is not an authorized Gravita contract"
+			"ActivePool: Caller is not an authorized Trinity contract"
 		);
 		_;
 	}
@@ -57,7 +57,7 @@ contract ActivePool is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
 				msg.sender == stabilityPool ||
 				msg.sender == vesselManager ||
 				msg.sender == vesselManagerOperations,
-			"ActivePool: Caller is not an authorized Gravita contract"
+			"ActivePool: Caller is not an authorized Trinity contract"
 		);
 		_;
 	}

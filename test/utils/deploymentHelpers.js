@@ -2,16 +2,11 @@ const ActivePool = artifacts.require("ActivePool")
 const AdminContract = artifacts.require("AdminContract")
 const BorrowerOperationsTester = artifacts.require("BorrowerOperationsTester")
 const CollSurplusPool = artifacts.require("CollSurplusPool")
-const CommunityIssuanceTester = artifacts.require("CommunityIssuanceTester")
 const DebtTokenTester = artifacts.require("DebtTokenTester")
 const DebtTokenWhitelistedTester = artifacts.require("DebtTokenWhitelistedTester")
 const DefaultPool = artifacts.require("DefaultPool")
 const ERC20Test = artifacts.require("ERC20Test")
-const FeeCollectorTester = artifacts.require("FeeCollectorTester")
 const GasPool = artifacts.require("GasPool")
-const GRVTStaking = artifacts.require("GRVTStaking")
-const GRVTTokenTester = artifacts.require("GRVTTokenTester")
-const LockedGRVT = artifacts.require("LockedGRVT")
 const PriceFeedTestnet = artifacts.require("PriceFeedTestnet")
 const SortedVessels = artifacts.require("SortedVessels")
 const StabilityPoolTester = artifacts.require("StabilityPoolTester")
@@ -28,15 +23,13 @@ const TIMELOCK_SHORT_DELAY = 86400 * 3
 const TIMELOCK_LONG_DELAY = 86400 * 7
 
 /**
- * Deploys Gravita's contracts to Hardhat TEST env
+ * Deploys Trinity's contracts to Hardhat TEST env
  */
 class DeploymentHelper {
 	static async deployTestContracts(treasuryAddress, collateralMintingAccounts = []) {
 		const core = await this._deployCoreContracts(treasuryAddress)
-		const grvt = await this._deployGrvtContracts(treasuryAddress)
-
-		await this._connectCoreContracts(core, grvt, treasuryAddress)
-		await this._connectGrvtContracts(grvt, core)
+		await this._connectCoreContracts(core, treasuryAddress)
+		await this._connectGrvtContracts(core)
 
 		for (const acc of collateralMintingAccounts) {
 			const mintingValue = dec(100_000_000, 18)
@@ -44,7 +37,7 @@ class DeploymentHelper {
 			await core.erc20B.mint(acc, mintingValue)
 		}
 
-		return { core, grvt }
+		return { core }
 	}
 
 	static async _deployCoreContracts(treasuryAddress) {
@@ -55,7 +48,6 @@ class DeploymentHelper {
 		const defaultPool = await DefaultPool.new()
 		const erc20 = await ERC20Test.new()
 		const erc20B = await ERC20Test.new()
-		const feeCollector = await FeeCollectorTester.new()
 		const gasPool = await GasPool.new()
 		const priceFeedTestnet = await PriceFeedTestnet.new()
 		const sortedVessels = await SortedVessels.new()
@@ -78,7 +70,6 @@ class DeploymentHelper {
 			debtToken,
 			debtTokenWhitelistedTester,
 			defaultPool,
-			feeCollector,
 			gasPool,
 			priceFeedTestnet,
 			vesselManager,
@@ -93,17 +84,6 @@ class DeploymentHelper {
 
 		await this._invokeInitializers(core)
 		return core
-	}
-
-	static async _deployGrvtContracts(treasury) {
-		const grvt = {
-			communityIssuance: await CommunityIssuanceTester.new(),
-			grvtStaking: await GRVTStaking.new(),
-			grvtToken: await GRVTTokenTester.new(treasury),
-			lockedGRVT: await LockedGRVT.new(),
-		}
-		await this._invokeInitializers(grvt)
-		return grvt
 	}
 
 	/**
@@ -121,7 +101,7 @@ class DeploymentHelper {
 	/**
 	 * Connects contracts to their dependencies.
 	 */
-	static async _connectCoreContracts(core, grvt, treasuryAddress) {
+	static async _connectCoreContracts(core, treasuryAddress) {
 		const setAddresses = async contract => {
 			const addresses = [
 				core.activePool.address,
@@ -130,7 +110,6 @@ class DeploymentHelper {
 				core.collSurplusPool.address,
 				core.debtToken.address,
 				core.defaultPool.address,
-				core.feeCollector.address,
 				core.gasPool.address,
 				core.priceFeedTestnet.address,
 				core.sortedVessels.address,
@@ -151,8 +130,6 @@ class DeploymentHelper {
 			const contract = core[key]
 			if (contract.setAddresses && contract.isAddressSetupInitialized) {
 				await setAddresses(contract)
-				await contract.setCommunityIssuance(grvt.communityIssuance.address)
-				await contract.setGRVTStaking(grvt.grvtStaking.address)
 			}
 		}
 		await core.debtToken.setAddresses(
@@ -160,7 +137,6 @@ class DeploymentHelper {
 			core.stabilityPool.address,
 			core.vesselManager.address
 		)
-		await core.debtToken.addWhitelist(core.feeCollector.address)
 
 		await core.priceFeedTestnet.setPrice(core.erc20.address, dec(200, "ether"))
 		await core.priceFeedTestnet.setPrice(core.erc20B.address, dec(100, "ether"))
@@ -182,40 +158,7 @@ class DeploymentHelper {
 	/**
 	 * Connects contracts to their dependencies.
 	 */
-	static async _connectGrvtContracts(grvt, core) {
-		const treasuryAddress = await grvt.grvtToken.treasury()
-
-		await grvt.grvtStaking.setAddresses(
-			core.debtToken.address,
-			core.feeCollector.address,
-			grvt.grvtToken.address,
-			treasuryAddress,
-			core.vesselManager.address
-		)
-
-		await grvt.grvtStaking.unpause()
-
-		await grvt.communityIssuance.setAddresses(
-			grvt.grvtToken.address,
-			core.stabilityPool.address,
-			core.adminContract.address
-		)
-
-		await grvt.lockedGRVT.setAddresses(grvt.grvtToken.address)
-
-		await grvt.grvtToken.approve(grvt.communityIssuance.address, ethers.constants.MaxUint256, {
-			from: treasuryAddress,
-		})
-
-		const supply = dec(32_000_000, 18)
-		const weeklyReward = dec(32_000_000 / 4, 18)
-
-		await grvt.grvtToken.unprotectedMint(treasuryAddress, supply)
-
-		await grvt.communityIssuance.transferOwnership(treasuryAddress)
-		await grvt.communityIssuance.addFundToStabilityPool(weeklyReward, { from: treasuryAddress })
-		await grvt.communityIssuance.setWeeklyGrvtDistribution(weeklyReward, { from: treasuryAddress })
-
+	static async _connectGrvtContracts(core) {
 		// Set configs (since the tests have been designed with it)
 		const defaultFee = (0.005e18).toString() // 0.5%
 		await core.adminContract.setCollateralParameters(
@@ -252,3 +195,4 @@ class DeploymentHelper {
 }
 
 module.exports = DeploymentHelper
+

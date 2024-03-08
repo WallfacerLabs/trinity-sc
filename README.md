@@ -1,10 +1,10 @@
-# Gravita: Decentralized Borrowing Protocol
+# Trinity: Decentralized Borrowing Protocol
 
-Gravita is a decentralized protocol that allows Ether or liquid staking derivatives (LSDs) holders to obtain maximum liquidity against
+Trinity is a decentralized protocol that allows Ether or liquid staking derivatives (LSDs) holders to obtain maximum liquidity against
 their collateral without paying interest. 
 
 ## Table of Content <!-- omit in toc -->
-- [Gravita: Decentralized Borrowing Protocol](#gravita-decentralized-borrowing-protocol)
+- [Trinity: Decentralized Borrowing Protocol](#trinity-decentralized-borrowing-protocol)
   - [Overview](#overview)
   - [Core System Architecture](#core-system-architecture)
     - [Core Smart Contracts](#core-smart-contracts)
@@ -21,25 +21,25 @@ their collateral without paying interest.
 
 ## Overview
 
-Gravita is based on [Liquity](https://github.com/liquity/dev), which introduced a fully decentralized borrowing protocol for eth. It is suggested to start from there to understand the underlying mechanisms of the protocol. 
+Trinity is based on [Liquity](https://github.com/liquity/dev), which introduced a fully decentralized borrowing protocol for eth. It is suggested to start from there to understand the underlying mechanisms of the protocol. 
 
 Liquity had many forks, which expanded on the original design (e.g. allowing multiple ERC-20 tokens as collateral).
-Gravita took inspiration from two in particular:
-- [Vesta](https://github.com/vesta-finance/vesta-protocol-v1/releases/tag/v1.0) is multi-collateral. Each position can have only one collateral type and it is linked to a specific stability pool. Gravita is a fork of Vesta v1.0. 
+Trinity took inspiration from two in particular:
+- [Vesta](https://github.com/vesta-finance/vesta-protocol-v1/releases/tag/v1.0) is multi-collateral. Each position can have only one collateral type and it is linked to a specific stability pool. Trinity is a fork of Vesta v1.0. 
 - [Yeti](https://techdocs.yeti.finance/about-yeti-finance/contracts) allows cross-collateral positions, linked to a single stability pool
 
-Gravita's debt token is called GRAI, while the governance token (not deployed on launch) GRVT.
+Trinity's debt token is called TRI.
 
-Gravita has an unique multi-collateral design in which each position has a single collateral type, but they are all linked to the same stability pool:
+Trinity has an unique multi-collateral design in which each position has a single collateral type, but they are all linked to the same stability pool:
 
-![Gravita's multi-collateral design](images/multi-collateral.png)
+![Trinity's multi-collateral design](images/multi-collateral.png)
 
 ***
 ## Core System Architecture
 
 The core Liquity system consists of several smart contracts, which are deployable to the Ethereum blockchain.
 
-All application logic and data are contained in these contracts - there is no need for a separate database or back end logic running on a web server. In effect, the Ethereum network is itself the Gravita back end. As such, all balances and contract data are public.
+All application logic and data are contained in these contracts - there is no need for a separate database or back end logic running on a web server. In effect, the Ethereum network is itself the Trinity back end. As such, all balances and contract data are public.
 
 The three main contracts - `BorrowerOperations.sol`, `VesselManager.sol` and `StabilityPool.sol` - hold the user-facing public functions, and contain most of the internal system logic. Together they control Vessel state updates and movements of collateral and debt tokens around the system.
 
@@ -53,9 +53,9 @@ The three main contracts - `BorrowerOperations.sol`, `VesselManager.sol` and `St
 
 `VesselManager.sol` and `VesselManagerOperations.sol` - contain functionality for liquidations and redemptions. They send redemption fees to the `FeeCollector` contract. Also contain the state of each Vessel - i.e. a record of the Vessel’s collateral and debt. VesselManager does not hold value (i.e. tokens). VesselManager functions call in to the various Pools to tell them to move tokens between Pools, where necessary.
 
-`GravitaBase.sol` - Both VesselManager and BorrowerOperations inherit from this parent contract, which contains some common functions.
+`TrinityBase.sol` - Both VesselManager and BorrowerOperations inherit from this parent contract, which contains some common functions.
 
-`StabilityPool.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated collateral and GRVT gains. Holds the debt token Stability Pool deposits, and the collateral gains for depositors, from liquidations.
+`StabilityPool.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated collateral. Holds the debt token Stability Pool deposits, and the collateral gains for depositors, from liquidations.
 
 `DebtToken.sol` - the debt token contract, which implements the ERC20 fungible token standard in conjunction with EIP-2612 and a mechanism that blocks (accidental) transfers to addresses like the StabilityPool and address(0) that are not supposed to receive funds through direct transfers. The contract mints, burns and transfers tokens.
 
@@ -102,9 +102,9 @@ The general changes in the design are the following:
 
 `GasPool` - no changes
 
-`GravitaBase` - no changes
+`TrinityBase` - no changes
 
-`GravitaMath` - no changes
+`TrinityMath` - no changes
 
 `PriceFeed` - major rewrite to add and update the price feed of all collateral types
 
@@ -145,19 +145,19 @@ Special cases:
 * no changes are made to the `from` (starting point for expiration) if additions are made within the first week of lending
 * the following diagram describes the behaviour: A refund of $10,000 falls linearly to $0 by day 175 (red line); halfway through (the remaining balance is now $5,000), the user acquires a new debt that entitles him to a new refund of $5,000, from day 87 to day 262 (blue line); the combined result is a refund of $10,000 that falls off faster (green line), based on the weight of that addition against the remaining balance/time.
 
-![Gravita's fee model](images/fee-model.jpg)
+![Trinity's fee model](images/fee-model.jpg)
 
 ***
 
 ## Development
 
-Gravita is based on Yarn's [workspaces](https://classic.yarnpkg.com/en/docs/workspaces/) feature. You might be able to install some of the packages individually with npm, but to make all interdependent packages see each other, you'll need to use Yarn.
+Trinity is based on Yarn's [workspaces](https://classic.yarnpkg.com/en/docs/workspaces/) feature. You might be able to install some of the packages individually with npm, but to make all interdependent packages see each other, you'll need to use Yarn.
 
 ### Clone & Install
 
 ```
-git clone https://github.com/Gravity-Finance/Gravity-protocol.git Gravita
-cd Gravita
+git clone https://github.com/Gravity-Finance/Gravity-protocol.git Trinity
+cd Trinity
 yarn
 ```
 

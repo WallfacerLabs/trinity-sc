@@ -1,5 +1,5 @@
 name: CI
-on: [push, pull_request]
+on: push
 env:
   SECRETS_FILE: ${{secrets.SECRETS_FILE}}
 
@@ -15,10 +15,12 @@ jobs:
           submodules: recursive
       - run: echo "$SECRETS_FILE" | base64 -d > .env
 
+      - name: Use Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
       - name: Install Components
         run: yarn install
 
-      - name: Run Gravita tests
-        run: yarn test test/gravita/*.js
+      - name: Run Trinity tests
+        run: yarn test test/trinity/*.js
         #run: yarn test
-

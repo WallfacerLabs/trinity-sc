@@ -9,12 +9,9 @@ abstract contract AddressesConfigurable is OwnableUpgradeable {
 	address public adminContract;
 	address public borrowerOperations;
 	address public collSurplusPool;
-	address public communityIssuance;
 	address public debtToken;
 	address public defaultPool;
-	address public feeCollector;
 	address public gasPoolAddress;
-	address public grvtStaking;
 	address public priceFeed;
 	address public sortedVessels;
 	address public stabilityPool;
@@ -36,8 +33,8 @@ abstract contract AddressesConfigurable is OwnableUpgradeable {
 
 	function setAddresses(address[] calldata _addresses) external onlyOwner {
 		require(!isAddressSetupInitialized, "Setup is already initialized");
-		require(_addresses.length == 15, "Expected 15 addresses at setup");
-		for (uint i = 0; i < 15; i++) {
+		require(_addresses.length == 14, "Expected 14 addresses at setup");
+		for (uint i = 0; i < 14; i++) {
 			require(_addresses[i] != address(0), "Invalid address");
 		}
 		activePool = _addresses[0];
@@ -46,25 +43,16 @@ abstract contract AddressesConfigurable is OwnableUpgradeable {
 		collSurplusPool = _addresses[3];
 		debtToken = _addresses[4];
 		defaultPool = _addresses[5];
-		feeCollector = _addresses[6];
-		gasPoolAddress = _addresses[7];
-		priceFeed = _addresses[8];
-		sortedVessels = _addresses[9];
-		stabilityPool = _addresses[10];
-		timelockAddress = _addresses[11];
-		treasuryAddress = _addresses[12];
-		vesselManager = _addresses[13];
-		vesselManagerOperations = _addresses[14];
+		gasPoolAddress = _addresses[6];
+		priceFeed = _addresses[7];
+		sortedVessels = _addresses[8];
+		stabilityPool = _addresses[9];
+		timelockAddress = _addresses[10];
+		treasuryAddress = _addresses[11];
+		vesselManager = _addresses[12];
+		vesselManagerOperations = _addresses[13];
 
 		isAddressSetupInitialized = true;
-	}
-
-	function setCommunityIssuance(address _communityIssuance) public onlyOwner {
-		communityIssuance = _communityIssuance;
-	}
-
-	function setGRVTStaking(address _grvtStaking) public onlyOwner {
-		grvtStaking = _grvtStaking;
 	}
 }
 

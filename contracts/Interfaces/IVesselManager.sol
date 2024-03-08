@@ -6,11 +6,11 @@ import "./IActivePool.sol";
 import "./ICollSurplusPool.sol";
 import "./IDebtToken.sol";
 import "./IDefaultPool.sol";
-import "./IGravitaBase.sol";
+import "./ITrinityBase.sol";
 import "./ISortedVessels.sol";
 import "./IStabilityPool.sol";
 
-interface IVesselManager is IGravitaBase {
+interface IVesselManager is ITrinityBase {
 	// Enums ------------------------------------------------------------------------------------------------------------
 
 	enum Status {
@@ -33,6 +33,7 @@ interface IVesselManager is IGravitaBase {
 	event BaseRateUpdated(address indexed _asset, uint256 _baseRate);
 	event LastFeeOpTimeUpdated(address indexed _asset, uint256 _lastFeeOpTime);
 	event TotalStakesUpdated(address indexed _asset, uint256 _newTotalStakes);
+	event RedemptionFeeCollected(address indexed asset, uint256 amount);
 	event SystemSnapshotsUpdated(address indexed _asset, uint256 _totalStakesSnapshot, uint256 _totalCollateralSnapshot);
 	event LTermsUpdated(address indexed _asset, uint256 _L_Coll, uint256 _L_Debt);
 	event VesselSnapshotsUpdated(address indexed _asset, uint256 _L_Coll, uint256 _L_Debt);

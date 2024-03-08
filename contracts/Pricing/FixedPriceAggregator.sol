@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.19;
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "../Interfaces/IPriceFeed.sol";
 
 /**
  * @dev This contract was created to serve as a price feed for the bLUSD-USD pair, fixed at a 1:1 rate.

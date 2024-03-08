@@ -111,7 +111,7 @@ contract PriceFeed is IPriceFeed, OwnableUpgradeable, UUPSUpgradeable, Addresses
 
 	function _fetchDecimals(address _oracle, ProviderType _type) internal view returns (uint8) {
 		if (_type == ProviderType.Chainlink) {
-			return ChainlinkAggregatorV3Interface(_oracle).decimals();
+			return AggregatorV3Interface(_oracle).decimals();
 		}
 		return 0;
 	}
@@ -138,7 +138,7 @@ contract PriceFeed is IPriceFeed, OwnableUpgradeable, UUPSUpgradeable, Addresses
 	function _fetchChainlinkOracleResponse(
 		address _chainlinkOracleAddress
 	) internal view returns (uint256 price, uint256 timestamp) {
-		try ChainlinkAggregatorV3Interface(_chainlinkOracleAddress).latestRoundData() returns (
+		try AggregatorV3Interface(_chainlinkOracleAddress).latestRoundData() returns (
 			uint80 roundId,
 			int256 answer,
 			uint256 /* startedAt */,
@@ -164,7 +164,7 @@ contract PriceFeed is IPriceFeed, OwnableUpgradeable, UUPSUpgradeable, Addresses
 	}
 
 	/**
-	 * @dev Scales oracle's response up/down to Gravita's target precision; returns unaltered price if already on
+	 * @dev Scales oracle's response up/down to Trinity's target precision; returns unaltered price if already on
 	 *     target digits.
 	 */
 	function _scalePriceByDigits(uint256 _price, uint256 _priceDigits) internal pure returns (uint256) {

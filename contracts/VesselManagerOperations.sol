@@ -4,10 +4,10 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import "./Dependencies/GravitaBase.sol";
+import "./Dependencies/TrinityBase.sol";
 import "./Interfaces/IVesselManagerOperations.sol";
 
-contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, ReentrancyGuardUpgradeable, GravitaBase {
+contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, ReentrancyGuardUpgradeable, TrinityBase {
 	string public constant NAME = "VesselManagerOperations";
 	uint256 public constant PERCENTAGE_PRECISION = 100_00;
 	uint256 public constant BATCH_SIZE_LIMIT = 25;
@@ -229,7 +229,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		}
 
 		// Decay the baseRate due to time passed, and then increase it according to the size of this redemption.
-		// Use the saved total GRAI supply value, from before it was reduced by the redemption.
+		// Use the saved total TRI supply value, from before it was reduced by the redemption.
 		IVesselManager(vesselManager).updateBaseRateFromRedemption(
 			_asset,
 			totals.totalCollDrawn,
@@ -318,7 +318,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 				remainingDebt = remainingDebt - currentVesselNetDebt;
 			} else {
 				if (currentVesselNetDebt > IAdminContract(adminContract).getMinNetDebt(vars.asset)) {
-					uint256 maxRedeemableDebt = GravitaMath._min(
+					uint256 maxRedeemableDebt = TrinityMath._min(
 						remainingDebt,
 						currentVesselNetDebt - IAdminContract(adminContract).getMinNetDebt(vars.asset)
 					);
@@ -333,7 +333,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 					uint256 newDebt = currentVesselNetDebt - maxRedeemableDebt;
 					uint256 compositeDebt = _getCompositeDebt(vars.asset, newDebt);
 
-					partialRedemptionHintNewICR = GravitaMath._computeNominalCR(newColl, compositeDebt);
+					partialRedemptionHintNewICR = TrinityMath._computeNominalCR(newColl, compositeDebt);
 					remainingDebt = remainingDebt - maxRedeemableDebt;
 				}
 
@@ -346,13 +346,13 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		truncatedDebtTokenAmount = _debtTokenAmount - remainingDebt;
 	}
 
-	/* getApproxHint() - return address of a Vessel that is, on average, (length / numTrials) positions away in the 
-    sortedVessels list from the correct insert position of the Vessel to be inserted. 
-    
-    Note: The output address is worst-case O(n) positions away from the correct insert position, however, the function 
+	/* getApproxHint() - return address of a Vessel that is, on average, (length / numTrials) positions away in the
+    sortedVessels list from the correct insert position of the Vessel to be inserted.
+
+    Note: The output address is worst-case O(n) positions away from the correct insert position, however, the function
     is probabilistic. Input can be tuned to guarantee results to a high degree of confidence, e.g:
 
-    Submitting numTrials = k * sqrt(length), with k = 15 makes it very, very likely that the ouput address will 
+    Submitting numTrials = k * sqrt(length), with k = 15 makes it very, very likely that the ouput address will
     be <= sqrt(length) positions away from the correct insert position.
     */
 	function getApproxHint(
@@ -368,7 +368,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		}
 
 		hintAddress = ISortedVessels(sortedVessels).getLast(_asset);
-		diff = GravitaMath._getAbsoluteDifference(_CR, IVesselManager(vesselManager).getNominalICR(_asset, hintAddress));
+		diff = TrinityMath._getAbsoluteDifference(_CR, IVesselManager(vesselManager).getNominalICR(_asset, hintAddress));
 		latestRandomSeed = _inputRandomSeed;
 
 		uint256 i = 1;
@@ -381,7 +381,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 			uint256 currentNICR = IVesselManager(vesselManager).getNominalICR(_asset, currentAddress);
 
 			// check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
-			uint256 currentDiff = GravitaMath._getAbsoluteDifference(currentNICR, _CR);
+			uint256 currentDiff = TrinityMath._getAbsoluteDifference(currentNICR, _CR);
 
 			if (currentDiff < diff) {
 				diff = currentDiff;
@@ -392,7 +392,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 	}
 
 	function computeNominalCR(uint256 _coll, uint256 _debt) external pure override returns (uint256) {
-		return GravitaMath._computeNominalCR(_coll, _debt);
+		return TrinityMath._computeNominalCR(_coll, _debt);
 	}
 
 	// Liquidation internal/helper functions ----------------------------------------------------------------------------
@@ -433,7 +433,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 					}
 					continue;
 				}
-				uint256 TCR = GravitaMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
+				uint256 TCR = TrinityMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
 
 				singleLiquidation = _liquidateRecoveryMode(
 					_asset,
@@ -748,7 +748,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 					break;
 				}
 
-				uint256 TCR = GravitaMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
+				uint256 TCR = TrinityMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
 
 				singleLiquidation = _liquidateRecoveryMode(
 					_asset,
@@ -816,7 +816,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 			 *  - Send a fraction of the vessel's collateral to the Stability Pool, equal to the fraction of its offset debt
 			 *
 			 */
-			debtToOffset = GravitaMath._min(_debt, _debtTokenInStabPool);
+			debtToOffset = TrinityMath._min(_debt, _debtTokenInStabPool);
 			collToSendToSP = (_coll * debtToOffset) / _debt;
 			debtToRedistribute = _debt - debtToOffset;
 			collToRedistribute = _coll - collToSendToSP;
@@ -857,7 +857,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		uint256 _entireSystemDebt,
 		uint256 _price
 	) internal view returns (bool) {
-		uint256 TCR = GravitaMath._computeCR(_entireSystemColl, _entireSystemDebt, _price);
+		uint256 TCR = TrinityMath._computeCR(_entireSystemColl, _entireSystemDebt, _price);
 		return TCR < IAdminContract(adminContract).getCcr(_asset);
 	}
 
@@ -869,6 +869,9 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		uint256 _debtTokenAmount,
 		uint256 _price
 	) internal view {
+		address redeemer = msg.sender;
+		require(IAdminContract(adminContract).getRedeemerIsWhitelisted(redeemer), "VesselManagerOperations: Redeemer not whitelisted");
+
 		uint256 redemptionBlockTimestamp = IAdminContract(adminContract).getRedemptionBlockTimestamp(_asset);
 		if (redemptionBlockTimestamp > block.timestamp) {
 			revert VesselManagerOperations__RedemptionIsBlocked();
@@ -880,7 +883,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		if (_debtTokenAmount == 0) {
 			revert VesselManagerOperations__EmptyAmount();
 		}
-		uint256 redeemerBalance = IDebtToken(debtToken).balanceOf(msg.sender);
+		uint256 redeemerBalance = IDebtToken(debtToken).balanceOf(redeemer);
 		if (redeemerBalance < _debtTokenAmount) {
 			revert VesselManagerOperations__InsufficientDebtTokenBalance(redeemerBalance);
 		}
@@ -891,7 +894,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		}
 	}
 
-	// Redeem as much collateral as possible from _borrower's vessel in exchange for GRAI up to _maxDebtTokenAmount
+	// Redeem as much collateral as possible from _borrower's vessel in exchange for TRI up to _maxDebtTokenAmount
 	function _redeemCollateralFromVessel(
 		address _asset,
 		address _borrower,
@@ -905,7 +908,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		uint256 vesselColl = IVesselManager(vesselManager).getVesselColl(_asset, _borrower);
 
 		// Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the vessel minus the liquidation reserve
-		singleRedemption.debtLot = GravitaMath._min(
+		singleRedemption.debtLot = TrinityMath._min(
 			_maxDebtTokenAmount,
 			vesselDebt - IAdminContract(adminContract).getDebtTokenGasCompensation(_asset)
 		);
@@ -924,7 +927,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		if (newDebt == IAdminContract(adminContract).getDebtTokenGasCompensation(_asset)) {
 			IVesselManager(vesselManager).executeFullRedemption(_asset, _borrower, newColl);
 		} else {
-			uint256 newNICR = GravitaMath._computeNominalCR(newColl, newDebt);
+			uint256 newNICR = TrinityMath._computeNominalCR(newColl, newDebt);
 
 			/*
 			 * If the provided hint is out of date, we bail since trying to reinsert without a good hint will almost

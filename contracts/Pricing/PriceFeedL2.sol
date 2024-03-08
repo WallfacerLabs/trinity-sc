@@ -69,7 +69,7 @@ contract PriceFeedL2 is PriceFeed {
 				/* uint256 startedAt */,
 				uint256 updatedAt,
 				/* uint80 answeredInRound */
-			) =	ChainlinkAggregatorV3Interface(sequencerUptimeFeedAddress).latestRoundData();
+			) =	AggregatorV3Interface(sequencerUptimeFeedAddress).latestRoundData();
 
 			// answer == 0 -> sequencer is up
 			// answer == 1 -> sequencer is down

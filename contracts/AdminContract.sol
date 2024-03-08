@@ -24,18 +24,21 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 	uint256 public constant CCR_DEFAULT = 1.5 ether; // 150%
 	uint256 public constant MCR_DEFAULT = 1.1 ether; // 110%
 	uint256 public constant MIN_NET_DEBT_DEFAULT = 2_000 ether;
-	uint256 public constant MINT_CAP_DEFAULT = 1_000_000 ether; // 1 million GRAI
+	uint256 public constant MINT_CAP_DEFAULT = 1_000_000 ether; // 1 million TRI
 	uint256 public constant PERCENT_DIVISOR_DEFAULT = 200; // dividing by 200 yields 0.5%
 	uint256 public constant REDEMPTION_FEE_FLOOR_DEFAULT = 0.005 ether; // 0.5%
 	uint256 public constant REDEMPTION_BLOCK_TIMESTAMP_DEFAULT = type(uint256).max; // never
+	bool public constant REDEMPTION_BASE_FEE_ENABLED_DEFAULT = false;
 
 	// State ------------------------------------------------------------------------------------------------------------
 
 	/**
-		@dev Cannot be public as struct has too many variables for the stack. 
+		@dev Cannot be public as struct has too many variables for the stack.
 		@dev Create special view structs/getters instead.
 	 */
 	mapping(address => CollateralParams) internal collateralParams;
+
+	mapping(address => bool) internal whitelistedRedeemers;
 
 	// list of all collateral types in collateralParams (active and deprecated)
 	// Addresses for easy access
@@ -118,7 +121,8 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 			mintCap: MINT_CAP_DEFAULT,
 			percentDivisor: PERCENT_DIVISOR_DEFAULT,
 			redemptionFeeFloor: REDEMPTION_FEE_FLOOR_DEFAULT,
-			redemptionBlockTimestamp: REDEMPTION_BLOCK_TIMESTAMP_DEFAULT
+			redemptionBlockTimestamp: REDEMPTION_BLOCK_TIMESTAMP_DEFAULT,
+			redemptionBaseFeeEnabled: REDEMPTION_BASE_FEE_ENABLED_DEFAULT
 		});
 
 		IStabilityPool(stabilityPool).addCollateralType(_collateral);
@@ -244,6 +248,16 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		emit RedemptionBlockTimestampChanged(_collateral, _blockTimestamp);
 	}
 
+	function setWhitelistedRedeemer(address _redeemer, bool _whitelisted) external onlyTimelock {
+		whitelistedRedeemers[_redeemer] = _whitelisted;
+		emit RedeemerWhitelisted(_redeemer, _whitelisted);
+	}
+
+	function setRedemptionBaseFeeEnabled(address _collateral, bool _enabled) external onlyTimelock {
+		collateralParams[_collateral].redemptionBaseFeeEnabled = _enabled;
+		emit BaseFeeEnabledChanged(_collateral, _enabled);
+	}
+
 	// View functions ---------------------------------------------------------------------------------------------------
 
 	function getValidCollateral() external view override returns (address[] memory) {
@@ -313,6 +327,14 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 
 	function getTotalAssetDebt(address _asset) external view override returns (uint256) {
 		return IActivePool(activePool).getDebtTokenBalance(_asset) + IDefaultPool(defaultPool).getDebtTokenBalance(_asset);
+	}
+
+	function getRedeemerIsWhitelisted(address _redeemer) external view returns (bool) {
+		return whitelistedRedeemers[_redeemer];
+	}
+
+	function getRedemptionBaseFeeEnabled(address _collateral) external view override returns (bool) {
+		return collateralParams[_collateral].redemptionBaseFeeEnabled;
 	}
 
 	// Internal Functions -----------------------------------------------------------------------------------------------

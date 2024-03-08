@@ -22,6 +22,7 @@ interface IAdminContract {
 		uint256 percentDivisor;
 		uint256 redemptionFeeFloor;
 		uint256 redemptionBlockTimestamp;
+		bool redemptionBaseFeeEnabled;
 	}
 
 	// Custom Errors ----------------------------------------------------------------------------------------------------
@@ -42,6 +43,8 @@ interface IAdminContract {
 	event RedemptionFeeFloorChanged(uint256 oldRedemptionFeeFloor, uint256 newRedemptionFeeFloor);
 	event MintCapChanged(uint256 oldMintCap, uint256 newMintCap);
 	event RedemptionBlockTimestampChanged(address _collateral, uint256 _blockTimestamp);
+	event RedeemerWhitelisted(address _redeemer, bool _whitelisted);
+	event BaseFeeEnabledChanged(address _collateral, bool _enabled);
 
 	// Functions --------------------------------------------------------------------------------------------------------
 
@@ -78,6 +81,10 @@ interface IAdminContract {
 
 	function setRedemptionBlockTimestamp(address _collateral, uint256 _blockTimestamp) external;
 
+	function setWhitelistedRedeemer(address _redeemer, bool _whitelisted) external;
+
+	function setRedemptionBaseFeeEnabled(address _collateral, bool _enabled) external;
+
 	function getIndex(address _collateral) external view returns (uint256);
 
 	function getIsActive(address _collateral) external view returns (bool);
@@ -103,4 +110,8 @@ interface IAdminContract {
 	function getMintCap(address _collateral) external view returns (uint256);
 
 	function getTotalAssetDebt(address _asset) external view returns (uint256);
+
+	function getRedeemerIsWhitelisted(address _redeemer) external view returns (bool);
+
+	function getRedemptionBaseFeeEnabled(address _collateral) external view returns (bool);
 }

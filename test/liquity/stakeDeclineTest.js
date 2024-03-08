@@ -35,7 +35,7 @@ contract("VesselManager", async accounts => {
 	}
 
 	beforeEach(async () => {
-		contracts = await deploymentHelper.deployGravitaCore()
+		contracts = await deploymentHelper.deployTrinityCore()
 		contracts.vesselManager = await VesselManagerTester.new()
 		contracts = await deploymentHelper.deployDebtTokenTester(contracts)
 		const GRVTContracts = await deploymentHelper.deployGRVTContractsHardhat(accounts[0])

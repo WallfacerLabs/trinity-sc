@@ -7,7 +7,7 @@ import "./Dependencies/ERC20Permit.sol";
 import "./Interfaces/IDebtToken.sol";
 
 contract DebtToken is IDebtToken, ERC20Permit, Ownable {
-	string public constant NAME = "GRAI";
+	string public constant NAME = "TRI";
 
 	// MAINNET-ONLY SECTION START -------------------------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ contract DebtToken is IDebtToken, ERC20Permit, Ownable {
 
 	// TESTNET-ONLY SECTION END ---------------------------------------------------------------------------------------
 
-	constructor() ERC20("Gravita Debt Token", "GRAI") {}
+	constructor() ERC20("Trinity Debt Token", "TRI") {}
 
 	mapping(address => bool) public emergencyStopMintingCollateral;
 

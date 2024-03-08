@@ -6,6 +6,7 @@ cache
 artifacts
 build/contracts
 bin
+cache_hardhat
 
 # Deployment script localhost cache
 /scripts/deployment/output/localhost.json

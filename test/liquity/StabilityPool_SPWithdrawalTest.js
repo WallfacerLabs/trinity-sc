@@ -61,7 +61,7 @@ contract("StabilityPool - Withdrawal of stability deposit - Reward calculations"
 
 	describe("Stability Pool Withdrawal", async () => {
 		async function deployContractsFixture() {
-			contracts = await deploymentHelper.deployGravitaCore()
+			contracts = await deploymentHelper.deployTrinityCore()
 			const GRVTContracts = await deploymentHelper.deployGRVTContractsHardhat(accounts[0])
 			contracts.vesselManager = await VesselManagerTester.new()
 			contracts = await deploymentHelper.deployDebtTokenTester(contracts)

@@ -3,12 +3,12 @@
 pragma solidity ^0.8.19;
 import "../VesselManager.sol";
 
-/* Tester contract inherits from VesselManager, and provides external functions 
+/* Tester contract inherits from VesselManager, and provides external functions
 for testing the parent's internal functions. */
 
 contract VesselManagerTester is VesselManager {
 	function computeICR(uint256 _coll, uint256 _debt, uint256 _price) external pure returns (uint256) {
-		return GravitaMath._computeCR(_coll, _debt, _price);
+		return TrinityMath._computeCR(_coll, _debt, _price);
 	}
 
 	function getCollGasCompensation(address _asset, uint256 _coll) external view returns (uint256) {

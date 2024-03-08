@@ -9,8 +9,8 @@ const CONTRACT_UPGRADES_ADMIN = "0x19596e1D6cd97916514B5DBaA4730781eFE49975"
 const SYSTEM_PARAMS_ADMIN = "0x19596e1D6cd97916514B5DBaA4730781eFE49975"
 const TREASURY_WALLET = "0x19596e1D6cd97916514B5DBaA4730781eFE49975"
 
-// Updated 06/20/2023 from Gravita-Protocol/layer-zero branch gravita-proxy file deployments/optimism-goerli/GravitaDebtToken.json commit 1564b4d
-const GRAI_TOKEN_ADDRESS = "0x32185feF1Ec11cB79298595fc6dF1398808Cb4E6"
+// Updated 06/20/2023 from Trinity-Protocol/layer-zero branch trinity-proxy file deployments/optimism-goerli/TrinityDebtToken.json commit 1564b4d
+const TRI_TOKEN_ADDRESS = "0x32185feF1Ec11cB79298595fc6dF1398808Cb4E6"
 
 // from https://docs.chain.link/data-feeds/l2-sequencer-feeds
 const SEQUENCER_UPTIME_FEED_ADDRESS = "0x4C4814aa04433e0FB31310379a4D6946D5e1D353"
@@ -34,10 +34,11 @@ module.exports = {
 	COLLATERAL,
 	CONTRACT_UPGRADES_ADMIN,
 	ETHERSCAN_BASE_URL,
-	GRAI_TOKEN_ADDRESS,
+	TRI_TOKEN_ADDRESS,
 	OUTPUT_FILE,
 	SEQUENCER_UPTIME_FEED_ADDRESS,
 	SYSTEM_PARAMS_ADMIN,
 	TREASURY_WALLET,
 	TX_CONFIRMATIONS,
 }
+

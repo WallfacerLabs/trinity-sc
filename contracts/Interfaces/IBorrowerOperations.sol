@@ -22,6 +22,7 @@ interface IBorrowerOperations {
 		uint256 stake,
 		BorrowerOperation operation
 	);
+	event VesselEpochUpdated(address indexed _asset, address indexed _borrower, uint256 _epoch);
 
 	// --- Functions ---
 
@@ -61,4 +62,9 @@ interface IBorrowerOperations {
 	function claimCollateral(address _asset) external;
 
 	function getCompositeDebt(address _asset, uint256 _debt) external view returns (uint256);
+
+	function collectVesselFee(
+		address _asset,
+		address _borrower
+	) external;
 }

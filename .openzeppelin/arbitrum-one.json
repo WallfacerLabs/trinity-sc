@@ -2488,7 +2488,7 @@
             "numberOfBytes": "32"
           },
           "t_struct(Colls)14251_storage": {
-            "label": "struct IGravitaBase.Colls",
+            "label": "struct ITrinityBase.Colls",
             "members": [
               {
                 "label": "tokens",

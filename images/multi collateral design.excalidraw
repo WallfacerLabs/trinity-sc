@@ -73,11 +73,11 @@
       "locked": false,
       "fontSize": 20,
       "fontFamily": 1,
-      "text": "Stability Pool\n(GRAI)",
+      "text": "Stability Pool\n(TRI)",
       "textAlign": "center",
       "verticalAlign": "middle",
       "containerId": "KACcHoodzhpNJPgHXuhH5",
-      "originalText": "Stability Pool\n(GRAI)"
+      "originalText": "Stability Pool\n(TRI)"
     },
     {
       "type": "rectangle",
@@ -1134,11 +1134,11 @@
       "locked": false,
       "fontSize": 28,
       "fontFamily": 1,
-      "text": "Gravita's multi-collateral design",
+      "text": "Trinity's multi-collateral design",
       "textAlign": "center",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "Gravita's multi-collateral design"
+      "originalText": "Trinity's multi-collateral design"
     },
     {
       "type": "arrow",
@@ -1518,11 +1518,11 @@
       "locked": false,
       "fontSize": 20,
       "fontFamily": 1,
-      "text": "Deposits GRAI in the pool",
+      "text": "Deposits TRI in the pool",
       "textAlign": "center",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "Deposits GRAI in the pool"
+      "originalText": "Deposits TRI in the pool"
     },
     {
       "type": "text",

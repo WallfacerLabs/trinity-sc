@@ -29,7 +29,7 @@ task("deploy-core-mainnet", "Deploys contracts to Mainnet").setAction(
 module.exports = {
 	paths: {
 		sources: "./contracts",
-		tests: "./test/gravita",
+		tests: "./test/trinity",
 		cache: "./cache",
 		artifacts: "./artifacts",
 	},

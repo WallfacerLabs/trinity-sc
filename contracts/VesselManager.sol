@@ -4,11 +4,10 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import "./Dependencies/GravitaBase.sol";
+import "./Dependencies/TrinityBase.sol";
 import "./Interfaces/IVesselManager.sol";
-import "./Interfaces/IFeeCollector.sol";
 
-contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgradeable, GravitaBase {
+contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgradeable, TrinityBase {
 	// Constants ------------------------------------------------------------------------------------------------------
 
 	string public constant NAME = "VesselManager";
@@ -130,14 +129,14 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 	function getNominalICR(address _asset, address _borrower) external view override returns (uint256) {
 		(uint256 currentAsset, uint256 currentDebt) = _getCurrentVesselAmounts(_asset, _borrower);
 
-		uint256 NICR = GravitaMath._computeNominalCR(currentAsset, currentDebt);
+		uint256 NICR = TrinityMath._computeNominalCR(currentAsset, currentDebt);
 		return NICR;
 	}
 
 	// Return the current collateral ratio (ICR) of a given Vessel. Takes a vessel's pending coll and debt rewards from redistributions into account.
 	function getCurrentICR(address _asset, address _borrower, uint256 _price) public view override returns (uint256) {
 		(uint256 currentAsset, uint256 currentDebt) = _getCurrentVesselAmounts(_asset, _borrower);
-		uint256 ICR = GravitaMath._computeCR(currentAsset, currentDebt, _price);
+		uint256 ICR = TrinityMath._computeCR(currentAsset, currentDebt, _price);
 		return ICR;
 	}
 
@@ -218,7 +217,7 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		return _calcRedemptionRate(_asset, _calcDecayedBaseRate(_asset));
 	}
 
-	// Called by Gravita contracts ------------------------------------------------------------------------------------
+	// Called by Trinity contracts ------------------------------------------------------------------------------------
 
 	function addVesselOwnerToArray(
 		address _asset,
@@ -239,7 +238,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		_removeStake(_asset, _borrower);
 		_closeVessel(_asset, _borrower, Status.closedByRedemption);
 		_redeemCloseVessel(_asset, _borrower, IAdminContract(adminContract).getDebtTokenGasCompensation(_asset), _newColl);
-		IFeeCollector(feeCollector).closeDebt(_borrower, _asset);
 		emit VesselUpdated(_asset, _borrower, 0, 0, 0, VesselManagerOperation.redeemCollateral);
 	}
 
@@ -261,11 +259,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		);
 
 		Vessel storage vessel = Vessels[_borrower][_asset];
-		uint256 paybackFraction = ((vessel.debt - _newDebt) * 1 ether) / vessel.debt;
-		if (paybackFraction != 0) {
-			IFeeCollector(feeCollector).decreaseDebt(_borrower, _asset, paybackFraction);
-		}
-
 		vessel.debt = _newDebt;
 		vessel.coll = _newColl;
 		_updateStakeAndTotalStakes(_asset, _borrower);
@@ -282,9 +275,8 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 	) external override onlyVesselManagerOperations {
 		// Send the asset fee
 		if (_assetFeeAmount != 0) {
-			address destination = IFeeCollector(feeCollector).getProtocolRevenueDestination();
-			IActivePool(activePool).sendAsset(_asset, destination, _assetFeeAmount);
-			IFeeCollector(feeCollector).handleRedemptionFee(_asset, _assetFeeAmount);
+			IActivePool(activePool).sendAsset(_asset, treasuryAddress, _assetFeeAmount);
+			emit RedemptionFeeCollected(_asset, _assetFeeAmount);
 		}
 		// Burn the total debt tokens that is cancelled with debt, and send the redeemed asset to msg.sender
 		IDebtToken(debtToken).burn(_receiver, _debtToRedeem);
@@ -300,11 +292,16 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		uint256 _price,
 		uint256 _totalDebtTokenSupply
 	) external override onlyVesselManagerOperations returns (uint256) {
-		uint256 decayedBaseRate = _calcDecayedBaseRate(_asset);
-		uint256 redeemedDebtFraction = (_assetDrawn * _price) / _totalDebtTokenSupply;
-		uint256 newBaseRate = decayedBaseRate + (redeemedDebtFraction / BETA);
-		newBaseRate = GravitaMath._min(newBaseRate, DECIMAL_PRECISION);
-		assert(newBaseRate != 0);
+		uint256 newBaseRate = 0;
+
+		if(IAdminContract(adminContract).getRedemptionBaseFeeEnabled(_asset)) {
+			uint256 decayedBaseRate = _calcDecayedBaseRate(_asset);
+			uint256 redeemedDebtFraction = (_assetDrawn * _price) / _totalDebtTokenSupply;
+			newBaseRate = decayedBaseRate + (redeemedDebtFraction / BETA);
+			newBaseRate = TrinityMath._min(newBaseRate, DECIMAL_PRECISION);
+			assert(newBaseRate != 0);
+		}
+
 		baseRate[_asset] = newBaseRate;
 		emit BaseRateUpdated(_asset, newBaseRate);
 		_updateLastFeeOpTime(_asset);
@@ -414,7 +411,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 
 	function closeVesselLiquidation(address _asset, address _borrower) external override onlyVesselManagerOperations {
 		_closeVessel(_asset, _borrower, Status.closedByLiquidation);
-		IFeeCollector(feeCollector).liquidateDebt(_borrower, _asset);
 		emit VesselUpdated(_asset, _borrower, 0, 0, 0, VesselManagerOperation.liquidateInNormalMode);
 	}
 
@@ -586,7 +582,7 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 	}
 
 	function _calcRedemptionRate(address _asset, uint256 _baseRate) internal view returns (uint256) {
-		return GravitaMath._min(IAdminContract(adminContract).getRedemptionFeeFloor(_asset) + _baseRate, DECIMAL_PRECISION);
+		return TrinityMath._min(IAdminContract(adminContract).getRedemptionFeeFloor(_asset) + _baseRate, DECIMAL_PRECISION);
 	}
 
 	function _calcRedemptionFee(uint256 _redemptionRate, uint256 _assetDraw) internal pure returns (uint256) {
@@ -608,7 +604,7 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 
 	function _calcDecayedBaseRate(address _asset) internal view returns (uint256) {
 		uint256 minutesPassed = _minutesPassedSinceLastFeeOp(_asset);
-		uint256 decayFactor = GravitaMath._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
+		uint256 decayFactor = TrinityMath._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
 		return (baseRate[_asset] * decayFactor) / DECIMAL_PRECISION;
 	}
 
@@ -642,7 +638,7 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		return VesselOwners[_asset][_index];
 	}
 
-	// --- Vessel property setters, called by Gravita's BorrowerOperations/VMRedemptions/VMLiquidations ---------------
+	// --- Vessel property setters, called by Trinity's BorrowerOperations/VMRedemptions/VMLiquidations ---------------
 
 	function setVesselStatus(address _asset, address _borrower, uint256 _num) external override onlyBorrowerOperations {
 		Vessels[_borrower][_asset].status = Status(_num);
@@ -688,12 +684,8 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		if (_debtDecrease == 0) {
 			return oldDebt; // no changes
 		}
-		uint256 paybackFraction = (_debtDecrease * 1 ether) / oldDebt;
 		uint256 newDebt = oldDebt - _debtDecrease;
 		vessel.debt = newDebt;
-		if (paybackFraction != 0) {
-			IFeeCollector(feeCollector).decreaseDebt(_borrower, _asset, paybackFraction);
-		}
 		return newDebt;
 	}
 

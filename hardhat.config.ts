@@ -5,6 +5,7 @@ import "@nomiclabs/hardhat-etherscan"
 import "@openzeppelin/hardhat-upgrades"
 import "@openzeppelin/hardhat-defender"
 import "solidity-coverage"
+import "@nomicfoundation/hardhat-foundry"
 
 import { task } from "hardhat/config"
 
@@ -34,7 +35,7 @@ task("deploy-core-arbitrum", "Deploys contracts to Arbitrum").setAction(
 module.exports = {
 	paths: {
 		sources: "./contracts",
-		tests: "./test/gravita",
+		tests: "./test/trinity",
 		cache: "./cache",
 		artifacts: "./artifacts",
 	},
@@ -66,7 +67,7 @@ module.exports = {
 			// accounts: [{ privateKey: process.env.DEPLOYER_PRIVATEKEY, balance: (10e18).toString() }, ...accountsList],
 			accounts: accountsList,
 		},
-		// Setup for testing files in test/gravita-fork:
+		// Setup for testing files in test/trinity-fork:
 		// hardhat: {
 		// 	accounts: accountsList,
 		// 	chainId: 42161,

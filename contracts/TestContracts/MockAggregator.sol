@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.19;
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "../Interfaces/IPriceFeed.sol";
 
 contract MockAggregator is AggregatorV3Interface {
 	uint8 private decimalsVal = 8;

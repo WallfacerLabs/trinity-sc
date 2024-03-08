@@ -40,16 +40,21 @@ export class CoreDeployer {
 		this.deployerWallet = new Wallet(process.env.DEPLOYER_PRIVATEKEY, this.hre.ethers.provider)
 	}
 
-	isTestnetDeployment = () => this.targetNetwork != DeploymentTarget.Mainnet && this.targetNetwork != DeploymentTarget.Arbitrum
+	isTestnetDeployment = () =>
+		this.targetNetwork != DeploymentTarget.Mainnet && this.targetNetwork != DeploymentTarget.Arbitrum
 	isLocalhostDeployment = () => this.targetNetwork == DeploymentTarget.Localhost
 	isLayer2Deployment = () =>
-		[DeploymentTarget.Arbitrum, DeploymentTarget.ArbitrumGoerliTestnet, DeploymentTarget.OptimismGoerliTestnet].includes(this.targetNetwork)
+		[
+			DeploymentTarget.Arbitrum,
+			DeploymentTarget.ArbitrumGoerliTestnet,
+			DeploymentTarget.OptimismGoerliTestnet,
+		].includes(this.targetNetwork)
 
 	/**
 	 * Main function that is invoked by the deployment process.
 	 */
 	async run() {
-		console.log(`Deploying Gravita Core on ${this.targetNetwork}...`)
+		console.log(`Deploying Trinity Core on ${this.targetNetwork}...`)
 
 		await this.printDeployerBalance()
 
@@ -69,7 +74,7 @@ export class CoreDeployer {
 	}
 
 	/**
-	 * Deploys all Gravita's Core contracts to the target network.
+	 * Deploys all Trinity's Core contracts to the target network.
 	 * If any of the contracts have already been deployed and contain a matching entry in the JSON
 	 *     "state" file, the existing address is attached to the contract instead.
 	 */
@@ -82,7 +87,6 @@ export class CoreDeployer {
 		const borrowerOperations = await this.deployUpgradeable("BorrowerOperations")
 		const collSurplusPool = await this.deployUpgradeable("CollSurplusPool")
 		const defaultPool = await this.deployUpgradeable("DefaultPool")
-		const feeCollector = await this.deployUpgradeable("FeeCollector")
 		const sortedVessels = await this.deployUpgradeable("SortedVessels")
 		const stabilityPool = await this.deployUpgradeable("StabilityPool")
 		const vesselManager = await this.deployUpgradeable("VesselManager")
@@ -115,9 +119,9 @@ export class CoreDeployer {
 		}
 
 		let debtToken: Contract
-		if (this.config.GRAI_TOKEN_ADDRESS) {
-			console.log(`Using existing DebtToken from ${this.config.GRAI_TOKEN_ADDRESS}`)
-			debtToken = await this.hre.ethers.getContractAt("DebtToken", this.config.GRAI_TOKEN_ADDRESS)
+		if (this.config.TRI_TOKEN_ADDRESS) {
+			console.log(`Using existing DebtToken from ${this.config.TRI_TOKEN_ADDRESS}`)
+			debtToken = await this.hre.ethers.getContractAt("DebtToken", this.config.TRI_TOKEN_ADDRESS)
 		} else {
 			debtToken = await this.deployNonUpgradeable("DebtToken")
 			await debtToken.setAddresses(borrowerOperations.address, stabilityPool.address, vesselManager.address)
@@ -130,7 +134,6 @@ export class CoreDeployer {
 			collSurplusPool,
 			debtToken,
 			defaultPool,
-			feeCollector,
 			gasPool,
 			priceFeed,
 			sortedVessels,
@@ -232,7 +235,6 @@ export class CoreDeployer {
 				this.coreContracts.collSurplusPool.address,
 				this.coreContracts.debtToken.address,
 				this.coreContracts.defaultPool.address,
-				this.coreContracts.feeCollector.address,
 				this.coreContracts.gasPool.address,
 				this.coreContracts.priceFeed.address,
 				this.coreContracts.sortedVessels.address,
@@ -441,7 +443,8 @@ export class CoreDeployer {
 		this.deployerBalance = await this.hre.ethers.provider.getBalance(this.deployerWallet.address)
 		const cost = prevBalance ? this.hre.ethers.utils.formatUnits(prevBalance.sub(this.deployerBalance)) : 0
 		console.log(
-			`${this.deployerWallet.address} Balance: ${this.hre.ethers.utils.formatUnits(this.deployerBalance)} ${cost ? `(Deployment cost: ${cost})` : ""
+			`${this.deployerWallet.address} Balance: ${this.hre.ethers.utils.formatUnits(this.deployerBalance)} ${
+				cost ? `(Deployment cost: ${cost})` : ""
 			}`
 		)
 	}
@@ -490,7 +493,7 @@ export class CoreDeployer {
 			const contract = contracts[name]
 			try {
 				name = await contract.NAME()
-			} catch (e) { }
+			} catch (e) {}
 			console.log(`Contract deployed: ${contract.address} -> ${name}`)
 		}
 	}
@@ -505,7 +508,6 @@ export class CoreDeployer {
 			await this.verifyContract("CollSurplusPool")
 			await this.verifyContract("DebtToken")
 			await this.verifyContract("DefaultPool")
-			await this.verifyContract("FeeCollector")
 			await this.verifyContract("GasPool")
 			await this.verifyContract("PriceFeed")
 			await this.verifyContract("SortedVessels")

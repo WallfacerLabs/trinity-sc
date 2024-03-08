@@ -20,7 +20,7 @@ contract("StabilityPool: Sum-Product rounding errors", async accounts => {
 	let erc20
 
 	beforeEach(async () => {
-		contracts = await deploymentHelper.deployGravitaCore()
+		contracts = await deploymentHelper.deployTrinityCore()
 		contracts.vesselManager = await VesselManagerTester.new()
 		contracts = await deploymentHelper.deployDebtTokenTester(contracts)
 		VesselManagerTester.setAsDeployed(contracts.vesselManager)
