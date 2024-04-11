@@ -81,8 +81,6 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 			// Save the address of the vessel preceding the current one, before potentially modifying the list
 			address nextUserToCheck = ISortedVessels(sortedVessels).getPrev(_asset, currentBorrower);
 
-			IVesselManager(vesselManager).applyPendingRewards(_asset, currentBorrower);
-
 			SingleRedemptionValues memory singleRedemption = _redeemCollateralFromVessel(
 				_asset,
 				currentBorrower,
@@ -187,8 +185,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		while (currentVesselBorrower != address(0) && remainingDebt != 0 && vars.maxIterations-- != 0) {
 			uint256 currentVesselNetDebt = _getNetDebt(
 				vars.asset,
-				IVesselManager(vesselManager).getVesselDebt(vars.asset, currentVesselBorrower) +
-					IVesselManager(vesselManager).getPendingDebtTokenReward(vars.asset, currentVesselBorrower)
+				IVesselManager(vesselManager).getVesselDebt(vars.asset, currentVesselBorrower)
 			);
 
 			if (currentVesselNetDebt <= remainingDebt) {
@@ -200,8 +197,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 						currentVesselNetDebt - IAdminContract(adminContract).getMinNetDebt(vars.asset)
 					);
 
-					uint256 currentVesselColl = IVesselManager(vesselManager).getVesselColl(vars.asset, currentVesselBorrower) +
-						IVesselManager(vesselManager).getPendingAssetReward(vars.asset, currentVesselBorrower);
+					uint256 currentVesselColl = IVesselManager(vesselManager).getVesselColl(vars.asset, currentVesselBorrower);
 
 					uint256 collLot = (maxRedeemableDebt * DECIMAL_PRECISION) / vars.price;
 					// Apply redemption softening

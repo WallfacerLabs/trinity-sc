@@ -230,42 +230,6 @@ contract("Access Control: functions where the caller is restricted to Trinity co
 		})
 	})
 	describe("VesselManager", async accounts => {
-		it("applyPendingRewards(): reverts when called by an account that is not BorrowerOperations", async () => {
-			// Attempt call from alice
-			try {
-				await vesselManager.applyPendingRewards(erc20.address, bob, { from: alice })
-			} catch (err) {
-				assert.include(err.message, "revert")
-				// assert.include(err.message, "Caller is not the BorrowerOperations contract")
-			}
-		})
-		it("updateRewardSnapshots(): reverts when called by an account that is not BorrowerOperations", async () => {
-			// Attempt call from alice
-			try {
-				await vesselManager.updateVesselRewardSnapshots(erc20.address, bob, { from: alice })
-			} catch (err) {
-				assert.include(err.message, "revert")
-				// assert.include(err.message, "Caller is not the BorrowerOperations contract")
-			}
-		})
-		it("removeStake(): reverts when called by an account that is not BorrowerOperations", async () => {
-			// Attempt call from alice
-			try {
-				await vesselManager.removeStake(erc20.address, bob, { from: alice })
-			} catch (err) {
-				assert.include(err.message, "revert")
-				// assert.include(err.message, "Caller is not the BorrowerOperations contract")
-			}
-		})
-		it("updateStakeAndTotalStakes(): reverts when called by an account that is not BorrowerOperations", async () => {
-			// Attempt call from alice
-			try {
-				await vesselManager.updateStakeAndTotalStakes(erc20.address, bob, { from: alice })
-			} catch (err) {
-				assert.include(err.message, "revert")
-				// assert.include(err.message, "Caller is not the BorrowerOperations contract")
-			}
-		})
 		it("closeVessel(): reverts when called by an account that is not BorrowerOperations", async () => {
 			// Attempt call from alice
 			try {

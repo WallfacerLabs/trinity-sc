@@ -25,14 +25,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 	 */
 	uint256 public constant BETA = 2;
 
-	// Structs --------------------------------------------------------------------------------------------------------
-
-	// Object containing the asset and debt token snapshots for a given active vessel
-	struct RewardSnapshot {
-		uint256 asset;
-		uint256 debt;
-	}
-
 	// State ----------------------------------------------------------------------------------------------------------
 
 	mapping(address => uint256) public baseRate;
@@ -42,28 +34,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 
 	// Vessels[borrower address][Collateral address]
 	mapping(address => mapping(address => Vessel)) public Vessels;
-
-	mapping(address => uint256) public totalStakes;
-
-	// Snapshot of the value of totalStakes, taken immediately after the latest liquidation
-	mapping(address => uint256) public totalStakesSnapshot;
-
-	// Snapshot of the total collateral across the ActivePool and DefaultPool, immediately after the latest liquidation.
-	mapping(address => uint256) public totalCollateralSnapshot;
-
-	/*
-	 * L_Colls and L_Debts track the sums of accumulated liquidation rewards per unit staked. During its lifetime, each stake earns:
-	 *
-	 * An asset gain of ( stake * [L_Colls - L_Colls(0)] )
-	 * A debt increase of ( stake * [L_Debts - L_Debts(0)] )
-	 *
-	 * Where L_Colls(0) and L_Debts(0) are snapshots of L_Colls and L_Debts for the active Vessel taken at the instant the stake was made
-	 */
-	mapping(address => uint256) public L_Colls;
-	mapping(address => uint256) public L_Debts;
-
-	// Map addresses with active vessels to their RewardSnapshot
-	mapping(address => mapping(address => RewardSnapshot)) public rewardSnapshots;
 
 	// Array of all active vessel addresses - used to to compute an approximate hint off-chain, for the sorted list insertion
 	mapping(address => address[]) public VesselOwners;
@@ -140,45 +110,13 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		return ICR;
 	}
 
-	// Get the borrower's pending accumulated asset reward, earned by their stake
-	function getPendingAssetReward(address _asset, address _borrower) public view override returns (uint256) {
-		uint256 snapshotAsset = rewardSnapshots[_borrower][_asset].asset;
-		uint256 rewardPerUnitStaked = L_Colls[_asset] - snapshotAsset;
-		if (rewardPerUnitStaked == 0 || !isVesselActive(_asset, _borrower)) {
-			return 0;
-		}
-		uint256 stake = Vessels[_borrower][_asset].stake;
-		uint256 pendingAssetReward = (stake * rewardPerUnitStaked) / DECIMAL_PRECISION;
-		return pendingAssetReward;
-	}
-
-	// Get the borrower's pending accumulated debt token reward, earned by their stake
-	function getPendingDebtTokenReward(address _asset, address _borrower) public view override returns (uint256) {
-		uint256 snapshotDebt = rewardSnapshots[_borrower][_asset].debt;
-		uint256 rewardPerUnitStaked = L_Debts[_asset] - snapshotDebt;
-		if (rewardPerUnitStaked == 0 || !isVesselActive(_asset, _borrower)) {
-			return 0;
-		}
-		uint256 stake = Vessels[_borrower][_asset].stake;
-		return (stake * rewardPerUnitStaked) / DECIMAL_PRECISION;
-	}
-
-	function hasPendingRewards(address _asset, address _borrower) public view override returns (bool) {
-		if (!isVesselActive(_asset, _borrower)) {
-			return false;
-		}
-		return (rewardSnapshots[_borrower][_asset].asset < L_Colls[_asset]);
-	}
-
 	function getEntireDebtAndColl(
 		address _asset,
 		address _borrower
 	) external view override returns (uint256 debt, uint256 coll, uint256 pendingDebtReward, uint256 pendingCollReward) {
-		pendingDebtReward = getPendingDebtTokenReward(_asset, _borrower);
-		pendingCollReward = getPendingAssetReward(_asset, _borrower);
 		Vessel storage vessel = Vessels[_borrower][_asset];
-		debt = vessel.debt + pendingDebtReward;
-		coll = vessel.coll + pendingCollReward;
+		debt = vessel.debt;
+		coll = vessel.coll;
 	}
 
 	function isVesselActive(address _asset, address _borrower) public view override returns (bool) {
@@ -235,7 +173,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		address _borrower,
 		uint256 _newColl
 	) external override nonReentrant onlyVesselManagerOperations {
-		_removeStake(_asset, _borrower);
 		_closeVessel(_asset, _borrower, Status.closedByRedemption);
 		_redeemCloseVessel(_asset, _borrower, IAdminContract(adminContract).getDebtTokenGasCompensation(_asset), _newColl);
 		emit VesselUpdated(_asset, _borrower, 0, 0, 0, VesselManagerOperation.redeemCollateral);
@@ -261,7 +198,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		Vessel storage vessel = Vessels[_borrower][_asset];
 		vessel.debt = _newDebt;
 		vessel.coll = _newColl;
-		_updateStakeAndTotalStakes(_asset, _borrower);
 
 		emit VesselUpdated(_asset, _borrower, _newDebt, _newColl, vessel.stake, VesselManagerOperation.redeemCollateral);
 	}
@@ -308,100 +244,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		return newBaseRate;
 	}
 
-	function applyPendingRewards(
-		address _asset,
-		address _borrower
-	) external override nonReentrant onlyVesselManagerOperationsOrBorrowerOperations {
-		return _applyPendingRewards(_asset, _borrower);
-	}
-
-	// Move a Vessel's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
-	function movePendingVesselRewardsToActivePool(
-		address _asset,
-		uint256 _debt,
-		uint256 _assetAmount
-	) external override onlyVesselManagerOperations {
-		_movePendingVesselRewardsToActivePool(_asset, _debt, _assetAmount);
-	}
-
-	// Update borrower's snapshots of L_Colls and L_Debts to reflect the current values
-	function updateVesselRewardSnapshots(address _asset, address _borrower) external override onlyBorrowerOperations {
-		return _updateVesselRewardSnapshots(_asset, _borrower);
-	}
-
-	function updateStakeAndTotalStakes(
-		address _asset,
-		address _borrower
-	) external override onlyBorrowerOperations returns (uint256) {
-		return _updateStakeAndTotalStakes(_asset, _borrower);
-	}
-
-	function removeStake(
-		address _asset,
-		address _borrower
-	) external override onlyVesselManagerOperationsOrBorrowerOperations {
-		return _removeStake(_asset, _borrower);
-	}
-
-	function redistributeDebtAndColl(
-		address _asset,
-		uint256 _debt,
-		uint256 _coll,
-		uint256 _debtToOffset,
-		uint256 _collToSendToStabilityPool
-	) external override nonReentrant onlyVesselManagerOperations {
-		IStabilityPool(stabilityPool).offset(_debtToOffset, _asset, _collToSendToStabilityPool);
-
-		if (_debt == 0) {
-			return;
-		}
-		/*
-		 * Add distributed coll and debt rewards-per-unit-staked to the running totals. Division uses a "feedback"
-		 * error correction, to keep the cumulative error low in the running totals L_Colls and L_Debts:
-		 *
-		 * 1) Form numerators which compensate for the floor division errors that occurred the last time this
-		 * function was called.
-		 * 2) Calculate "per-unit-staked" ratios.
-		 * 3) Multiply each ratio back by its denominator, to reveal the current floor division error.
-		 * 4) Store these errors for use in the next correction when this function is called.
-		 * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
-		 */
-		uint256 collNumerator = (_coll * DECIMAL_PRECISION) + lastCollError_Redistribution[_asset];
-		uint256 debtNumerator = (_debt * DECIMAL_PRECISION) + lastDebtError_Redistribution[_asset];
-
-		// Get the per-unit-staked terms
-		uint256 assetStakes = totalStakes[_asset];
-		uint256 collRewardPerUnitStaked = collNumerator / assetStakes;
-		uint256 debtRewardPerUnitStaked = debtNumerator / assetStakes;
-
-		lastCollError_Redistribution[_asset] = collNumerator - (collRewardPerUnitStaked * assetStakes);
-		lastDebtError_Redistribution[_asset] = debtNumerator - (debtRewardPerUnitStaked * assetStakes);
-
-		// Add per-unit-staked terms to the running totals
-		uint256 liquidatedColl = L_Colls[_asset] + collRewardPerUnitStaked;
-		uint256 liquidatedDebt = L_Debts[_asset] + debtRewardPerUnitStaked;
-		L_Colls[_asset] = liquidatedColl;
-		L_Debts[_asset] = liquidatedDebt;
-		emit LTermsUpdated(_asset, liquidatedColl, liquidatedDebt);
-
-		IActivePool(activePool).decreaseDebt(_asset, _debt);
-		IDefaultPool(defaultPool).increaseDebt(_asset, _debt);
-		IActivePool(activePool).sendAsset(_asset, defaultPool, _coll);
-	}
-
-	function updateSystemSnapshots_excludeCollRemainder(
-		address _asset,
-		uint256 _collRemainder
-	) external onlyVesselManagerOperations {
-		uint256 totalStakesCached = totalStakes[_asset];
-		totalStakesSnapshot[_asset] = totalStakesCached;
-		uint256 activeColl = IActivePool(activePool).getAssetBalance(_asset);
-		uint256 liquidatedColl = IDefaultPool(defaultPool).getAssetBalance(_asset);
-		uint256 _totalCollateralSnapshot = activeColl - _collRemainder + liquidatedColl;
-		totalCollateralSnapshot[_asset] = _totalCollateralSnapshot;
-		emit SystemSnapshotsUpdated(_asset, totalStakesCached, _totalCollateralSnapshot);
-	}
-
 	function closeVessel(
 		address _asset,
 		address _borrower
@@ -439,100 +281,13 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		IActivePool(activePool).sendAsset(_asset, collSurplusPool, _assetAmount);
 	}
 
-	function _movePendingVesselRewardsToActivePool(
-		address _asset,
-		uint256 _debtTokenAmount,
-		uint256 _assetAmount
-	) internal {
-		IDefaultPool(defaultPool).decreaseDebt(_asset, _debtTokenAmount);
-		IActivePool(activePool).increaseDebt(_asset, _debtTokenAmount);
-		IDefaultPool(defaultPool).sendAssetToActivePool(_asset, _assetAmount);
-	}
-
 	function _getCurrentVesselAmounts(
 		address _asset,
 		address _borrower
 	) internal view returns (uint256 coll, uint256 debt) {
-		uint256 pendingCollReward = getPendingAssetReward(_asset, _borrower);
-		uint256 pendingDebtReward = getPendingDebtTokenReward(_asset, _borrower);
 		Vessel memory vessel = Vessels[_borrower][_asset];
-		coll = vessel.coll + pendingCollReward;
-		debt = vessel.debt + pendingDebtReward;
-	}
-
-	// Add the borrowers's coll and debt rewards earned from redistributions, to their Vessel
-	function _applyPendingRewards(address _asset, address _borrower) internal {
-		if (!hasPendingRewards(_asset, _borrower)) {
-			return;
-		}
-
-		// Compute pending rewards
-		uint256 pendingCollReward = getPendingAssetReward(_asset, _borrower);
-		uint256 pendingDebtReward = getPendingDebtTokenReward(_asset, _borrower);
-
-		// Apply pending rewards to vessel's state
-		Vessel storage vessel = Vessels[_borrower][_asset];
-		vessel.coll = vessel.coll + pendingCollReward;
-		vessel.debt = vessel.debt + pendingDebtReward;
-
-		_updateVesselRewardSnapshots(_asset, _borrower);
-
-		// Transfer from DefaultPool to ActivePool
-		_movePendingVesselRewardsToActivePool(_asset, pendingDebtReward, pendingCollReward);
-
-		emit VesselUpdated(
-			_asset,
-			_borrower,
-			vessel.debt,
-			vessel.coll,
-			vessel.stake,
-			VesselManagerOperation.applyPendingRewards
-		);
-	}
-
-	function _updateVesselRewardSnapshots(address _asset, address _borrower) internal {
-		uint256 liquidatedColl = L_Colls[_asset];
-		uint256 liquidatedDebt = L_Debts[_asset];
-		RewardSnapshot storage snapshot = rewardSnapshots[_borrower][_asset];
-		snapshot.asset = liquidatedColl;
-		snapshot.debt = liquidatedDebt;
-		emit VesselSnapshotsUpdated(_asset, liquidatedColl, liquidatedDebt);
-	}
-
-	function _removeStake(address _asset, address _borrower) internal {
-		Vessel storage vessel = Vessels[_borrower][_asset];
-		totalStakes[_asset] -= vessel.stake;
-		vessel.stake = 0;
-	}
-
-	// Update borrower's stake based on their latest collateral value
-	function _updateStakeAndTotalStakes(address _asset, address _borrower) internal returns (uint256) {
-		Vessel storage vessel = Vessels[_borrower][_asset];
-		uint256 newStake = _computeNewStake(_asset, vessel.coll);
-		uint256 oldStake = vessel.stake;
-		vessel.stake = newStake;
-		uint256 newTotal = totalStakes[_asset] - oldStake + newStake;
-		totalStakes[_asset] = newTotal;
-		emit TotalStakesUpdated(_asset, newTotal);
-		return newStake;
-	}
-
-	// Calculate a new stake based on the snapshots of the totalStakes and totalCollateral taken at the last liquidation
-	function _computeNewStake(address _asset, uint256 _coll) internal view returns (uint256 stake) {
-		uint256 assetColl = totalCollateralSnapshot[_asset];
-		if (assetColl == 0) {
-			stake = _coll;
-		} else {
-			uint256 assetStakes = totalStakesSnapshot[_asset];
-			/*
-			 * The following assert() holds true because:
-			 * - The system always contains >= 1 vessel
-			 * - When we close or liquidate a vessel, we redistribute the pending rewards, so if all vessels were closed/liquidated,
-			 * rewards would’ve been emptied and totalCollateralSnapshot would be zero too.
-			 */
-			assert(assetStakes != 0);
-			stake = (_coll * assetStakes) / assetColl;
-		}
+		coll = vessel.coll;
+		debt = vessel.debt;
 	}
 
 	function _closeVessel(address _asset, address _borrower, Status closedStatus) internal {
@@ -547,10 +302,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		vessel.status = closedStatus;
 		vessel.coll = 0;
 		vessel.debt = 0;
-
-		RewardSnapshot storage rewardSnapshot = rewardSnapshots[_borrower][_asset];
-		rewardSnapshot.asset = 0;
-		rewardSnapshot.debt = 0;
 
 		_removeVesselOwner(_asset, _borrower, VesselOwnersArrayLength);
 		ISortedVessels(sortedVessels).remove(_asset, _borrower);

@@ -1732,9 +1732,6 @@ contract("VesselManager", async accounts => {
 
 				assert.isTrue(await sortedVessels.contains(erc20.address, flyn))
 
-				// Liquidate Flyn
-				await vesselManagerOperations.liquidate(erc20.address, flyn)
-				assert.isFalse(await sortedVessels.contains(erc20.address, flyn))
 
 				// Price bounces back, bringing B, C, D back above MCRw
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
@@ -2218,7 +2215,9 @@ contract("VesselManager", async accounts => {
 
 				const { 0: upperPartialRedemptionHint_Asset, 1: lowerPartialRedemptionHint_Asset } =
 					await sortedVessels.findInsertPosition(erc20.address, partialRedemptionHintNICR_Asset, bob, bob)
+				let redeemError;
 				try {
+					await adminContract.setWhitelistedRedeemer(bob, true)
 					await vesselManagerOperations.redeemCollateral(
 						erc20.address,
 						dec(100, 18),
@@ -2231,9 +2230,9 @@ contract("VesselManager", async accounts => {
 						{ from: bob }
 					)
 				} catch (error) {
-					console.log(error)
-					assert.include(error.message, "VM Exception while processing transaction")
+					redeemError = error;
 				}
+				assert.include(redeemError.message, "VM Exception while processing transaction")
 			})
 
 			it("redeemCollateral(): reverts if caller's tries to redeem more than the outstanding system debt", async () => {
@@ -3533,94 +3532,6 @@ contract("VesselManager", async accounts => {
 		})
 
 		describe("Extras", async () => {
-			it("getPendingDebtTokenReward(): returns 0 if there is no pending TRIDebt reward", async () => {
-				// Make some vessels
-
-				const { totalDebt: totalDebt_Asset } = await openVessel({
-					asset: erc20.address,
-					ICR: toBN(dec(2, 18)),
-					extraTRIAmount: dec(100, 18),
-					extraParams: { from: defaulter_1 },
-				})
-				await openVessel({
-					asset: erc20.address,
-					ICR: toBN(dec(3, 18)),
-					extraTRIAmount: dec(20, 18),
-					extraParams: { from: carol },
-				})
-				await openVessel({
-					asset: erc20.address,
-					ICR: toBN(dec(20, 18)),
-					extraTRIAmount: totalDebt_Asset,
-					extraParams: { from: whale },
-				})
-
-				await stabilityPool.provideToSP(totalDebt_Asset, validCollateral, { from: whale })
-
-				// Price drops
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				await vesselManagerOperations.liquidate(erc20.address, defaulter_1)
-
-				// Confirm defaulter_1 liquidated
-				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_1))
-
-				// Confirm there are no pending rewards from liquidation
-
-				const current_L_TRIDebt_Asset = await vesselManager.L_Debts(erc20.address)
-				assert.equal(current_L_TRIDebt_Asset, 0)
-
-				const carolSnapshot_L_TRIDebt_Asset = (await vesselManager.rewardSnapshots(carol, erc20.address))[1]
-				assert.equal(carolSnapshot_L_TRIDebt_Asset, 0)
-
-				const carol_PendingTRIDebtReward_Asset = await vesselManager.getPendingDebtTokenReward(erc20.address, carol)
-				assert.equal(carol_PendingTRIDebtReward_Asset, 0)
-			})
-
-			it("getPendingETHReward(): returns 0 if there is no pending ETH reward", async () => {
-				// make some vessels
-
-				const { totalDebt: totalDebt_Asset } = await openVessel({
-					asset: erc20.address,
-					ICR: toBN(dec(2, 18)),
-					extraTRIAmount: dec(100, 18),
-					extraParams: { from: defaulter_1 },
-				})
-				await openVessel({
-					asset: erc20.address,
-					ICR: toBN(dec(3, 18)),
-					extraTRIAmount: dec(20, 18),
-					extraParams: { from: carol },
-				})
-				await openVessel({
-					asset: erc20.address,
-					ICR: toBN(dec(20, 18)),
-					extraTRIAmount: totalDebt_Asset,
-					extraParams: { from: whale },
-				})
-
-				await stabilityPool.provideToSP(totalDebt_Asset, validCollateral, { from: whale })
-
-				// Price drops
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				await vesselManagerOperations.liquidate(erc20.address, defaulter_1)
-
-				// Confirm defaulter_1 liquidated
-				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_1))
-
-				// Confirm there are no pending rewards from liquidation
-
-				const current_L_ETH_Asset = await vesselManager.L_Colls(erc20.address)
-				assert.equal(current_L_ETH_Asset, 0)
-
-				const carolSnapshot_L_ETH_Asset = (await vesselManager.rewardSnapshots(carol, erc20.address))[0]
-				assert.equal(carolSnapshot_L_ETH_Asset, 0)
-
-				const carol_PendingETHReward_Asset = await vesselManager.getPendingAssetReward(erc20.address, carol)
-				assert.equal(carol_PendingETHReward_Asset, 0)
-			})
-
 			// --- computeICR ---
 
 			it("computeICR(): returns 0 if vessel's coll is worth 0", async () => {
@@ -3778,25 +3689,6 @@ contract("VesselManager", async accounts => {
 		})
 
 		describe("Getters", async () => {
-			it("getVesselStake(): returns stake", async () => {
-				const { collateral: A_coll_Asset } = await openVessel({
-					asset: erc20.address,
-					ICR: toBN(dec(150, 16)),
-					extraParams: { from: A },
-				})
-				const { collateral: B_coll_Asset } = await openVessel({
-					asset: erc20.address,
-					ICR: toBN(dec(150, 16)),
-					extraParams: { from: B },
-				})
-
-				const A_Stake_Asset = await vesselManager.getVesselStake(erc20.address, A)
-				const B_Stake_Asset = await vesselManager.getVesselStake(erc20.address, B)
-
-				assert.equal(A_Stake_Asset, A_coll_Asset.toString())
-				assert.equal(B_Stake_Asset, B_coll_Asset.toString())
-			})
-
 			it("getVesselColl(): returns coll", async () => {
 				const { collateral: A_coll_Asset } = await openVessel({
 					asset: erc20.address,
@@ -3859,10 +3751,6 @@ contract("VesselManager", async accounts => {
 				assert.equal(A_Status_Asset, "1") // active
 				assert.equal(B_Status_Asset, "2") // closed by user
 				assert.equal(C_Status_Asset, "0") // non-existent
-			})
-
-			it("hasPendingRewards(): returns false it vessel is not active", async () => {
-				assert.isFalse(await vesselManager.hasPendingRewards(erc20.address, alice))
 			})
 		})
 	})

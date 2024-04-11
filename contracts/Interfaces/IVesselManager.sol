@@ -97,19 +97,7 @@ interface IVesselManager is ITrinityBase {
 		uint256 _price
 	) external view returns (uint256);
 
-	function updateStakeAndTotalStakes(address _asset, address _borrower) external returns (uint256);
-
-	function updateVesselRewardSnapshots(address _asset, address _borrower) external;
-
 	function addVesselOwnerToArray(address _asset, address _borrower) external returns (uint256 index);
-
-	function applyPendingRewards(address _asset, address _borrower) external;
-
-	function getPendingAssetReward(address _asset, address _borrower) external view returns (uint256);
-
-	function getPendingDebtTokenReward(address _asset, address _borrower) external view returns (uint256);
-
-	function hasPendingRewards(address _asset, address _borrower) external view returns (bool);
 
 	function getEntireDebtAndColl(address _asset, address _borrower)
 		external
@@ -122,8 +110,6 @@ interface IVesselManager is ITrinityBase {
 		);
 
 	function closeVessel(address _asset, address _borrower) external;
-
-	function removeStake(address _asset, address _borrower) external;
 
 	function getRedemptionRate(address _asset) external view returns (uint256);
 
@@ -198,22 +184,6 @@ interface IVesselManager is ITrinityBase {
 		uint256 _debtToRedeem,
 		uint256 _fee,
 		uint256 _totalRedemptionRewards
-	) external;
-
-	function redistributeDebtAndColl(
-		address _asset,
-		uint256 _debt,
-		uint256 _coll,
-		uint256 _debtToOffset,
-		uint256 _collToSendToStabilityPool
-	) external;
-
-	function updateSystemSnapshots_excludeCollRemainder(address _asset, uint256 _collRemainder) external;
-
-	function movePendingVesselRewardsToActivePool(
-		address _asset,
-		uint256 _debtTokenAmount,
-		uint256 _assetAmount
 	) external;
 
 	function isVesselActive(address _asset, address _borrower) external view returns (bool);

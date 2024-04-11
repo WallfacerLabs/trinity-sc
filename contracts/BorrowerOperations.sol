@@ -110,9 +110,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		IVesselManager(vesselManager).increaseVesselColl(vars.asset, msg.sender, _assetAmount);
 		IVesselManager(vesselManager).increaseVesselDebt(vars.asset, msg.sender, vars.compositeDebt);
 
-		IVesselManager(vesselManager).updateVesselRewardSnapshots(vars.asset, msg.sender);
-		vars.stake = IVesselManager(vesselManager).updateStakeAndTotalStakes(vars.asset, msg.sender);
-
 		ISortedVessels(sortedVessels).insert(vars.asset, msg.sender, vars.NICR, _upperHint, _lowerHint);
 		vars.arrayIndex = IVesselManager(vesselManager).addVesselOwnerToArray(vars.asset, msg.sender);
 		emit VesselCreated(vars.asset, msg.sender, vars.arrayIndex);
@@ -226,8 +223,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		// Confirm the operation is either a borrower adjusting their own vessel, or a pure asset transfer from the Stability Pool to a vessel
 		assert(msg.sender == _borrower || (stabilityPool == msg.sender && _assetSent != 0 && _debtTokenChange == 0));
 
-		IVesselManager(vesselManager).applyPendingRewards(vars.asset, _borrower);
-
 		// Get the collChange based on whether or not asset was sent in the transaction
 		(vars.collChange, vars.isCollIncrease) = _getCollChange(_assetSent, _collWithdrawal);
 
@@ -273,7 +268,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 			vars.netDebtChange,
 			_isDebtIncrease
 		);
-		vars.stake = IVesselManager(vesselManager).updateStakeAndTotalStakes(vars.asset, _borrower);
 
 		// Re-insert vessel in to the sorted list
 		uint256 newNICR = _getNewNominalICRFromVesselChange(
@@ -305,8 +299,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		uint256 price = IPriceFeed(priceFeed).fetchPrice(_asset);
 		_requireNotInRecoveryMode(_asset, price);
 
-		IVesselManager(vesselManager).applyPendingRewards(_asset, msg.sender);
-
 		uint256 coll = IVesselManager(vesselManager).getVesselColl(_asset, msg.sender);
 		uint256 debt = IVesselManager(vesselManager).getVesselDebt(_asset, msg.sender);
 
@@ -318,7 +310,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		uint256 newTCR = _getNewTCRFromVesselChange(_asset, coll, false, debt, false, price);
 		_requireNewTCRisAboveCCR(_asset, newTCR);
 
-		IVesselManager(vesselManager).removeStake(_asset, msg.sender);
 		IVesselManager(vesselManager).closeVessel(_asset, msg.sender);
 
 		emit VesselUpdated(_asset, msg.sender, 0, 0, 0, BorrowerOperation.closeVessel);
@@ -361,7 +352,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 			return;
 		}
 
-		IVesselManager(vesselManager).applyPendingRewards(_asset, _borrower);
 		uint256 debt = IVesselManager(vesselManager).getVesselDebt(_asset, _borrower);
 
 		uint256 debtTokenFee = _triggerBorrowingFee(_asset, _borrower, debt);
