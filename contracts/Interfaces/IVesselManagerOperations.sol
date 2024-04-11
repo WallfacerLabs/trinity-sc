@@ -119,12 +119,6 @@ interface IVesselManagerOperations is ITrinityBase {
 
 	// Functions --------------------------------------------------------------------------------------------------------
 
-	function liquidate(address _asset, address _borrower) external;
-
-	function liquidateVessels(address _asset, uint256 _n) external;
-
-	function batchLiquidateVessels(address _asset, address[] memory _vesselArray) external;
-
 	function redeemCollateral(
 		address _asset,
 		uint256 _debtTokenAmount,

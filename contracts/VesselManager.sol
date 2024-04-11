@@ -409,11 +409,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		return _closeVessel(_asset, _borrower, Status.closedByOwner);
 	}
 
-	function closeVesselLiquidation(address _asset, address _borrower) external override onlyVesselManagerOperations {
-		_closeVessel(_asset, _borrower, Status.closedByLiquidation);
-		emit VesselUpdated(_asset, _borrower, 0, 0, 0, VesselManagerOperation.liquidateInNormalMode);
-	}
-
 	function sendGasCompensation(
 		address _asset,
 		address _liquidator,

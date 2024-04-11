@@ -123,8 +123,6 @@ interface IVesselManager is ITrinityBase {
 
 	function closeVessel(address _asset, address _borrower) external;
 
-	function closeVesselLiquidation(address _asset, address _borrower) external;
-
 	function removeStake(address _asset, address _borrower) external;
 
 	function getRedemptionRate(address _asset) external view returns (uint256);
