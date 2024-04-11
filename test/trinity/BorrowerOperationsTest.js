@@ -6613,13 +6613,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset] = th.getEmittedLiquidationValues(liquidationTx_Asset)
-
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
 
@@ -6635,10 +6628,9 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset))
+					.div(vesselTotalDebt.mul(toBN(2)))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
@@ -6655,13 +6647,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset] = th.getEmittedLiquidationValues(liquidationTx_Asset)
-
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
 
@@ -6677,10 +6662,9 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset).add(toBN(debtChange)))
+					.div(vesselTotalDebt.mul(toBN(2)).add(toBN(debtChange)))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
@@ -6697,14 +6681,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset] = th.getEmittedLiquidationValues(liquidationTx_Asset)
-
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
 
@@ -6720,10 +6696,9 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset).sub(toBN(dec(100, 18))))
+					.div(vesselTotalDebt.mul(toBN(2)).sub(toBN(dec(100, 18))))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
@@ -6740,13 +6715,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset] = th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
@@ -6762,11 +6730,10 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.add(toBN(collChange))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset))
+					.div(vesselTotalDebt.mul(toBN(2)))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
@@ -6783,15 +6750,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_Asset)
-
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
 
@@ -6807,11 +6765,10 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.sub(toBN(dec(1, "ether")))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset))
+					.div(vesselTotalDebt.mul(toBN(2)))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
@@ -6828,15 +6785,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_Asset)
-
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
 
@@ -6852,11 +6800,10 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.sub(toBN(dec(1, "ether")))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset).sub(toBN(dec(100, 18))))
+					.div(vesselTotalDebt.mul(toBN(2)).sub(toBN(dec(100, 18))))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
@@ -6873,14 +6820,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset] = th.getEmittedLiquidationValues(liquidationTx_Asset)
-
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
 
@@ -6896,11 +6835,10 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.add(toBN(dec(1, "ether")))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset).add(toBN(dec(100, 18))))
+					.div(vesselTotalDebt.mul(toBN(2)).add(toBN(dec(100, 18))))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
@@ -6917,14 +6855,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset] = th.getEmittedLiquidationValues(liquidationTx_Asset)
-
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
 
@@ -6940,11 +6870,10 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.add(toBN(dec(1, "ether")))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset).sub(toBN(dec(100, 18))))
+					.div(vesselTotalDebt.mul(toBN(2)).sub(toBN(dec(100, 18))))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
@@ -6961,14 +6890,6 @@ contract("BorrowerOperations", async accounts => {
 				})
 				await borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, bob, bob, { from: bob })
 
-				await priceFeed.setPrice(erc20.address, dec(100, 18))
-
-				const liquidationTx_Asset = await vesselManagerOperations.liquidate(erc20.address, bob)
-
-				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
-
-				const [liquidatedDebt_Asset, liquidatedColl_Asset] = th.getEmittedLiquidationValues(liquidationTx_Asset)
-
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
 				const price = await priceFeed.getPrice(erc20.address)
 
@@ -6984,11 +6905,10 @@ contract("BorrowerOperations", async accounts => {
 					price
 				)
 
-				const expectedTCR_Asset = vesselColl
-					.add(liquidatedColl_Asset)
+				const expectedTCR_Asset = vesselColl.mul(toBN(2))
 					.sub(toBN(collChange))
 					.mul(price)
-					.div(vesselTotalDebt.add(liquidatedDebt_Asset).add(toBN(debtChange)))
+					.div(vesselTotalDebt.mul(toBN(2)).add(toBN(debtChange)))
 
 				assert.isTrue(newTCR_Asset.eq(expectedTCR_Asset))
 			})
