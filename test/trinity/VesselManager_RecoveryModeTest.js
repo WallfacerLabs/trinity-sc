@@ -4362,7 +4362,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 			collGasComp_Asset,
 			equivalentColl_Asset.sub(th.applyLiquidationFee(equivalentColl_Asset))
 		) // 0.5% of 283/120*1.1
-		assert.equal(TRIGasComp_Asset.toString(), dec(400, 18))
+		assert.equal(TRIGasComp_Asset.toString(), 0)
 
 		// check collateral surplus
 
@@ -5335,7 +5335,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 			equivalentColl_Asset.sub(th.applyLiquidationFee(equivalentColl_Asset))
 		) // 0.5% of 283/120*1.1
 
-		assert.equal(TRIGasComp_Asset.toString(), dec(400, 18))
+		assert.equal(TRIGasComp_Asset.toString(), 0)
 
 		// check collateral surplus
 

@@ -3887,7 +3887,7 @@ contract("VesselManager", async accounts => {
 				// A's remaining debt = 10,000 (A) + 20,0000 (B) + 30,000 (C) - 55,000 (R) = 5,000
 				const A_debt_Asset = await vesselManager.getVesselDebt(erc20.address, A)
 
-				th.assertIsApproximatelyEqual(A_debt_Asset, dec(4600, 18), 1000)
+				th.assertIsApproximatelyEqual(A_debt_Asset, dec(5000, 18), 10)
 			})
 
 			it("redeemCollateral(): doesn't perform partial redemption if resultant debt would be < minimum net debt", async () => {

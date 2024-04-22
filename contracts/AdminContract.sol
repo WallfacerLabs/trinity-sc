@@ -297,10 +297,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		return collateralParams[_collateral].ccr;
 	}
 
-	function getDebtTokenGasCompensation(address _collateral) external view override returns (uint256) {
-		return collateralParams[_collateral].debtTokenGasCompensation;
-	}
-
 	function getMinNetDebt(address _collateral) external view override returns (uint256) {
 		return collateralParams[_collateral].minNetDebt;
 	}

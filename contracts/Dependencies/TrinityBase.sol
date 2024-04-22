@@ -23,16 +23,11 @@ abstract contract TrinityBase is ITrinityBase, BaseMath, OwnableUpgradeable, Add
 
 	// Returns the composite debt (drawn debt + gas compensation) of a vessel, for the purpose of ICR calculation
 	function _getCompositeDebt(address _asset, uint256 _debt) internal view returns (uint256) {
-		return _debt + IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
+		return _debt;
 	}
 
 	function _getNetDebt(address _asset, uint256 _debt) internal view returns (uint256) {
-		return _debt - IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
-	}
-
-	// Return the amount of ETH to be drawn from a vessel's collateral and sent as gas compensation.
-	function _getCollGasCompensation(address _asset, uint256 _entireColl) internal view returns (uint256) {
-		return _entireColl / IAdminContract(adminContract).getPercentDivisor(_asset);
+		return _debt;
 	}
 
 	function getEntireSystemColl(address _asset) public view returns (uint256 entireSystemColl) {

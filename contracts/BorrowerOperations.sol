@@ -90,8 +90,7 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		_requireAtLeastMinNetDebt(vars.asset, vars.netDebt);
 
 		// ICR is based on the composite debt, i.e. the requested debt token amount + borrowing fee + gas comp.
-		uint256 gasCompensation = IAdminContract(adminContract).getDebtTokenGasCompensation(vars.asset);
-		vars.compositeDebt = vars.netDebt + gasCompensation;
+		vars.compositeDebt = vars.netDebt;
 		require(vars.compositeDebt != 0, "compositeDebt cannot be 0");
 
 		vars.ICR = TrinityMath._computeCR(_assetAmount, vars.compositeDebt, vars.price);
@@ -120,10 +119,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		// Move the asset to the Active Pool, and mint the debtToken amount to the borrower
 		_activePoolAddColl(vars.asset, _assetAmount);
 		_withdrawDebtTokens(vars.asset, msg.sender, _debtTokenAmount, vars.netDebt);
-		// Move the debtToken gas compensation to the Gas Pool
-		if (gasCompensation != 0) {
-			_withdrawDebtTokens(vars.asset, gasPoolAddress, gasCompensation, gasCompensation);
-		}
 
 		emit VesselUpdated(
 			vars.asset,
@@ -310,8 +305,7 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		uint256 coll = IVesselManager(vesselManager).getVesselColl(_asset, msg.sender);
 		uint256 debt = IVesselManager(vesselManager).getVesselDebt(_asset, msg.sender);
 
-		uint256 gasCompensation = IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
-		uint256 netDebt = debt - gasCompensation;
+		uint256 netDebt = debt;
 
 		_requireSufficientDebtTokenBalance(msg.sender, netDebt);
 
@@ -325,9 +319,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 		// Burn the repaid debt tokens from the user's balance and the gas compensation from the Gas Pool
 		_repayDebtTokens(_asset, msg.sender, netDebt);
-		if (gasCompensation != 0) {
-			_repayDebtTokens(_asset, gasPoolAddress, gasCompensation);
-		}
 
 		// Send the collateral back to the user
 		IActivePool(activePool).sendAsset(_asset, msg.sender, coll);
@@ -587,7 +578,7 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 	function _requireValidDebtTokenRepayment(address _asset, uint256 _currentDebt, uint256 _debtRepayment) internal view {
 		require(
-			_debtRepayment <= _currentDebt - IAdminContract(adminContract).getDebtTokenGasCompensation(_asset),
+			_debtRepayment <= _currentDebt,
 			"BorrowerOps: Amount repaid must not be larger than the Vessel's debt"
 		);
 	}

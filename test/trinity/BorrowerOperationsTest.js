@@ -53,7 +53,7 @@ contract("BorrowerOperations", async accounts => {
 	const getVesselEntireDebt = async (vessel, asset) => th.getVesselEntireDebt(contracts.core, vessel, asset)
 	const getVesselStake = async (vessel, asset) => th.getVesselStake(contracts.core, vessel, asset)
 
-	let TRI_GAS_COMPENSATION_ERC20
+	const TRI_GAS_COMPENSATION_ERC20 = 0
 	let MIN_NET_DEBT_ERC20
 
 	withProxy = false
@@ -62,7 +62,6 @@ contract("BorrowerOperations", async accounts => {
 		before(async () => {
 			await deploy(treasury, [])
 
-			TRI_GAS_COMPENSATION_ERC20 = await adminContract.getDebtTokenGasCompensation(erc20.address)
 			MIN_NET_DEBT_ERC20 = await adminContract.getMinNetDebt(erc20.address)
 			BORROWING_FEE_ERC20 = await adminContract.getBorrowingFee(erc20.address)
 

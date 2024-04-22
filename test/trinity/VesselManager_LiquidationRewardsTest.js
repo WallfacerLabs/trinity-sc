@@ -153,7 +153,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: A, B, C Open. C Liquidated. D, E, F Open. F Liquidated. Distributes correct rewards", async () => {
@@ -284,7 +284,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 	////
 
@@ -437,7 +437,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isAtMost(th.getDifference(entireSystemColl_Asset, F_coll_Asset.add(gainedETH_Asset)), 1000)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(1000, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	// ---Vessel adds collateral ---
@@ -629,7 +629,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isTrue(txA_Asset.receipt.status)
 		assert.isFalse(await sortedVessels.contains(erc20.address, A))
 
-		const A_collRedistribution_Asset = A_entireColl_0_Asset.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+		const A_collRedistribution_Asset = A_entireColl_0_Asset
 
 		// console.log(`A_collRedistribution: ${A_collRedistribution}`)
 		// Check accumulated ETH gain for each vessel
@@ -674,7 +674,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isTrue(txC_Asset.receipt.status)
 		assert.isFalse(await sortedVessels.contains(erc20.address, C))
 
-		const C_collRedistribution_Asset = C_entireColl_1_Asset.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+		const C_collRedistribution_Asset = C_entireColl_1_Asset
 		// console.log(`C_collRedistribution: ${C_collRedistribution}`)
 
 		const B_ETHGain_2_Asset = await vesselManager.getPendingAssetReward(erc20.address, B)
@@ -718,7 +718,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isTrue(txE_Asset.receipt.status)
 		assert.isFalse(await sortedVessels.contains(erc20.address, E))
 
-		const E_collRedistribution_Asset = E_entireColl_2_Asset.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+		const E_collRedistribution_Asset = E_entireColl_2_Asset
 		// console.log(`E_collRedistribution: ${E_collRedistribution}`)
 
 		const B_ETHGain_3_Asset = await vesselManager.getPendingAssetReward(erc20.address, B)
@@ -938,7 +938,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isAtMost(th.getDifference(alice_TRIDebt_Asset, expected_A_debt_Asset), 10000)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: Vessel with the majority stake tops up. A,B,C, D open. Liq(D). C tops up. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1102,7 +1102,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		// check TRI gas compensation
-		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: Vessel with the majority stake tops up. A,B,C, D open. Liq(D). A, B, C top up. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1269,7 +1269,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		// check TRI gas compensation
-		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	// --- Vessel withdraws collateral ---
@@ -1361,7 +1361,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: A,B,C Open. Liq(C). B withdraws coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
@@ -1501,7 +1501,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		// check TRI gas compensation
-		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: Vessel with the majority stake withdraws. A,B,C,D open. Liq(D). C withdraws some coll. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1665,7 +1665,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: Vessel with the majority stake withdraws. A,B,C,D open. Liq(D). A, B, C withdraw. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1847,7 +1847,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	// For calculations of correct values used in test, see scenario 1:
@@ -2100,7 +2100,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		th.assertIsApproximatelyEqual(totalCollateralSnapshot_Asset, totalCollateralSnapshotAfterL3_Asset)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(600, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	// For calculations of correct values used in test, see scenario 2:
@@ -2364,7 +2364,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		th.assertIsApproximatelyEqual(totalCollateralSnapshot_Asset, totalCollateralSnapshotAfterL3_Asset)
 
 		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(600, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 })
 

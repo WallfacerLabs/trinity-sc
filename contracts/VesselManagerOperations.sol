@@ -571,9 +571,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		);
 		IVesselManager(vesselManager).removeStake(_asset, _borrower);
 
-		singleLiquidation.collGasCompensation = _getCollGasCompensation(_asset, singleLiquidation.entireVesselColl);
-		singleLiquidation.debtTokenGasCompensation = IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
-		uint256 collToLiquidate = singleLiquidation.entireVesselColl - singleLiquidation.collGasCompensation;
+		uint256 collToLiquidate = singleLiquidation.entireVesselColl;
 
 		(
 			singleLiquidation.debtToOffset,
@@ -612,9 +610,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 			vars.pendingCollReward
 		) = IVesselManager(vesselManager).getEntireDebtAndColl(_asset, _borrower);
 
-		singleLiquidation.collGasCompensation = _getCollGasCompensation(_asset, singleLiquidation.entireVesselColl);
-		singleLiquidation.debtTokenGasCompensation = IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
-		vars.collToLiquidate = singleLiquidation.entireVesselColl - singleLiquidation.collGasCompensation;
+		vars.collToLiquidate = singleLiquidation.entireVesselColl;
 
 		// If ICR <= 100%, purely redistribute the Vessel across all active Vessels
 		if (_ICR <= IAdminContract(adminContract)._100pct()) {
@@ -841,11 +837,8 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		singleLiquidation.entireVesselColl = _entireVesselColl;
 		uint256 cappedCollPortion = (_entireVesselDebt * IAdminContract(adminContract).getMcr(_asset)) / _price;
 
-		singleLiquidation.collGasCompensation = _getCollGasCompensation(_asset, cappedCollPortion);
-		singleLiquidation.debtTokenGasCompensation = IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
-
 		singleLiquidation.debtToOffset = _entireVesselDebt;
-		singleLiquidation.collToSendToSP = cappedCollPortion - singleLiquidation.collGasCompensation;
+		singleLiquidation.collToSendToSP = cappedCollPortion;
 		singleLiquidation.collSurplus = _entireVesselColl - cappedCollPortion;
 		singleLiquidation.debtToRedistribute = 0;
 		singleLiquidation.collToRedistribute = 0;
@@ -908,10 +901,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		uint256 vesselColl = IVesselManager(vesselManager).getVesselColl(_asset, _borrower);
 
 		// Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the vessel minus the liquidation reserve
-		singleRedemption.debtLot = TrinityMath._min(
-			_maxDebtTokenAmount,
-			vesselDebt - IAdminContract(adminContract).getDebtTokenGasCompensation(_asset)
-		);
+		singleRedemption.debtLot = TrinityMath._min(_maxDebtTokenAmount, vesselDebt);
 
 		// Get the debtToken lot of equivalent value in USD
 		singleRedemption.collLot = (singleRedemption.debtLot * DECIMAL_PRECISION) / _price;
@@ -924,7 +914,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		uint256 newDebt = vesselDebt - singleRedemption.debtLot;
 		uint256 newColl = vesselColl - singleRedemption.collLot;
 
-		if (newDebt == IAdminContract(adminContract).getDebtTokenGasCompensation(_asset)) {
+		if (newDebt == 0) {
 			IVesselManager(vesselManager).executeFullRedemption(_asset, _borrower, newColl);
 		} else {
 			uint256 newNICR = TrinityMath._computeNominalCR(newColl, newDebt);

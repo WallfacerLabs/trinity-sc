@@ -209,7 +209,7 @@ class TestHelper {
 	}
 
 	static applyLiquidationFee(ethAmount) {
-		return ethAmount.mul(this.toBN(this.dec(995, 15))).div(MoneyValues._1e18BN)
+		return ethAmount
 	}
 	// --- Logging functions ---
 
