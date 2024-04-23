@@ -72,22 +72,22 @@ contract("Gas compensation tests", async accounts => {
     coll = 9.999 ETH
     debt = 10 TRI
     0.5% of coll = 0.04995 ETH. USD value: $9.99
-    -> Expect composite debt = 10 + 200  = 2100 TRI*/
-		assert.equal(await vesselManager.getCompositeDebt(erc20.address, dec(10, 18)), dec(210, 18))
+    -> Expect composite debt = 10 TRI*/
+		assert.equal(await vesselManager.getCompositeDebt(erc20.address, dec(10, 18)), dec(10, 18))
 
 		/* ETH:USD price = 200
      coll = 0.055 ETH
      debt = 0 TRI
      0.5% of coll = 0.000275 ETH. USD value: $0.055
-     -> Expect composite debt = 0 + 200 = 200 TRI*/
-		assert.equal(await vesselManager.getCompositeDebt(erc20.address, 0), dec(200, 18))
+     -> Expect composite debt = 0 TRI*/
+		assert.equal(await vesselManager.getCompositeDebt(erc20.address, 0), 0)
 
 		// /* ETH:USD price = 200
 		// coll = 6.09232408808723580 ETH
 		// debt = 200 TRI
 		// 0.5% of coll = 0.004995 ETH. USD value: $6.09
-		// -> Expect  composite debt =  200 + 200 = 400  TRI */
-		assert.equal(await vesselManager.getCompositeDebt(erc20.address, dec(200, 18)), "400000000000000000000")
+		// -> Expect  composite debt =  200 TRI */
+		assert.equal(await vesselManager.getCompositeDebt(erc20.address, dec(200, 18)), dec(200, 18))
 	})
 
 	// returns $10 worth of ETH when 0.5% of coll == $10
@@ -100,8 +100,8 @@ contract("Gas compensation tests", async accounts => {
     coll = 10 ETH
     debt = 123.45 TRI
     0.5% of coll = 0.5 ETH. USD value: $10
-    -> Expect composite debt = (123.45 + 200) = 323.45 TRI  */
-		assert.equal(await vesselManager.getCompositeDebt(erc20.address, "123450000000000000000"), "323450000000000000000")
+    -> Expect composite debt = 123.45 TRI  */
+		assert.equal(await vesselManager.getCompositeDebt(erc20.address, "123450000000000000000"), "123450000000000000000")
 	})
 
 	/// ***
@@ -115,55 +115,55 @@ contract("Gas compensation tests", async accounts => {
     ETH:USD price = 200 $/E
     coll = 100 ETH
     debt = 2000 TRI
-    -> Expect composite debt = (2000 + 200) = 2200 TRI  */
+    -> Expect composite debt = 2000 TRI  */
 		assert.equal(
-			(await vesselManager.getCompositeDebt(erc20.address, dec(2000, 18))).toString(),
-			"2200000000000000000000"
+			(await vesselManager.getCompositeDebt(erc20.address, dec(2000, 18))),
+			dec(2000, 18)
 		)
 
 		/*
     ETH:USD price = 200 $/E
     coll = 10.001 ETH
     debt = 200 TRI
-    -> Expect composite debt = (200 + 200) = 400 TRI  */
+    -> Expect composite debt = 200 TRI  */
 		assert.equal(
-			(await vesselManager.getCompositeDebt(erc20.address, dec(200, 18))).toString(),
-			"400000000000000000000"
+			(await vesselManager.getCompositeDebt(erc20.address, dec(200, 18))),
+			dec(200, 18)
 		)
 
 		/*
     ETH:USD price = 200 $/E
     coll = 37.5 ETH
     debt = 500 TRI
-    -> Expect composite debt = (500 + 200) = 700 TRI  */
+    -> Expect composite debt = 500 TRI  */
 		assert.equal(
 			(await vesselManager.getCompositeDebt(erc20.address, dec(500, 18))).toString(),
-			"700000000000000000000"
+			dec(500, 18)
 		)
 
 		/*
     ETH:USD price = 45323.54542 $/E
     coll = 94758.230582309850 ETH
     debt = 1 billion TRI
-    -> Expect composite debt = (1000000000 + 200) = 1000000200 TRI  */
+    -> Expect composite debt = 100000000 TRI  */
 		await priceFeed.setPrice(erc20.address, "45323545420000000000000")
 		assert.isAtMost(
 			th.getDifference(
-				(await vesselManager.getCompositeDebt(erc20.address, dec(1, 27))).toString(),
-				"1000000200000000000000000000"
+				(await vesselManager.getCompositeDebt(erc20.address, dec(1, 27))),
+				dec(1, 27)
 			),
-			100000000000
+			0
 		)
 
 		/*
     ETH:USD price = 1000000 $/E (1 million)
     coll = 300000000 ETH   (300 million)
     debt = 54321.123456789 TRI
-   -> Expect composite debt = (54321.123456789 + 200) = 54521.123456789 TRI */
+   -> Expect composite debt = 54321.123456789 TRI */
 		await priceFeed.setPrice(erc20.address, dec(1, 24))
 		assert.equal(
-			(await vesselManager.getCompositeDebt(erc20.address, "54321123456789000000000")).toString(),
-			"54521123456789000000000"
+			(await vesselManager.getCompositeDebt(erc20.address, "54321123456789000000000")),
+			"54321123456789000000000"
 		)
 	})
 
