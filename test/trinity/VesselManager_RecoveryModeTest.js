@@ -2181,8 +2181,13 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 
 		const dennis_Deposit_Before_Asset = (await stabilityPool.getCompoundedDebtTokenDeposits(dennis)).toString()
 		const dennis_ETHGain_Before_Asset = (await getDepositorGain(dennis, validCollateral, erc20.address)).toString()
-		assert.isAtMost(th.getDifference(dennis_Deposit_Before_Asset, spDeposit_Asset.sub(C_totalDebt_Asset)), 1000)
-		assert.isAtMost(th.getDifference(dennis_ETHGain_Before_Asset, th.applyLiquidationFee(C_coll_Asset)), 1000)
+
+		const lastDebtTokenLossError_Offset = (await stabilityPool.lastDebtTokenLossError_Offset()).div(toBN(10).pow(toBN(18)))
+		const idx = validCollateral.indexOf(erc20.address)
+		const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(idx)).div(toBN(10).pow(toBN(18)))
+
+		assert.equal(th.getDifference(dennis_Deposit_Before_Asset, spDeposit_Asset.sub(C_totalDebt_Asset)).toString(), lastDebtTokenLossError_Offset.toString())
+		assert.equal(th.getDifference(dennis_ETHGain_Before_Asset, th.applyLiquidationFee(C_coll_Asset)).toString(), lastAssetError_Offset.toString())
 
 		// Attempt to liquidate Dennis
 
