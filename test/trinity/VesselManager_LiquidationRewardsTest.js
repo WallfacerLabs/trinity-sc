@@ -28,6 +28,10 @@ const deploy = async (treasury, mintingAccounts) => {
 	vesselManagerOperations = contracts.core.vesselManagerOperations
 	shortTimelock = contracts.core.shortTimelock
 	longTimelock = contracts.core.longTimelock
+
+	for(const account of mintingAccounts) {
+		await adminContract.setWhitelistedRedeemer(account, true)
+	}
 }
 
 contract("VesselManager - Redistribution reward calculations", async accounts => {

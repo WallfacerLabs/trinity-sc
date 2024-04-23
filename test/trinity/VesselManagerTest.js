@@ -45,6 +45,10 @@ const deploy = async (treasury, mintingAccounts) => {
 
 	// getDepositorGains() expects a sorted collateral array
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
+
+	for(const account of mintingAccounts) {
+		await adminContract.setWhitelistedRedeemer(account, true)
+	}
 }
 
 /* NOTE: Some tests involving ETH redemption fees do not test for specific fee values.
@@ -126,6 +130,24 @@ contract("VesselManager", async accounts => {
 		})
 
 		describe("Liquidations", async () => {
+			it("liquidate(): reverts when not whitelisted", async () => {
+				await openVessel({
+					asset: erc20.address,
+					ICR: toBN(dec(4, 18)),
+					extraParams: { from: alice },
+				})
+
+				await adminContract.setWhitelistedRedeemer(alice, false)
+
+				try {
+					const tx = await vesselManagerOperations.liquidate(erc20.address, alice, {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
+
 			it("liquidate(): closes a Vessel that has ICR < MCR", async () => {
 				await openVessel({
 					asset: erc20.address,
@@ -1412,6 +1434,19 @@ contract("VesselManager", async accounts => {
 
 			// --- liquidateVessels() ---
 
+			it("liquidateVessels(): reverts when not whitelisted", async () => {
+				await adminContract.setWhitelistedRedeemer(alice, false)
+	
+				try {
+					const tx = await vesselManagerOperations.liquidateVessels(erc20.address, 2, {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					console.log(err.message)
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
+
 			it("liquidateVessels(): liquidates a Vessel that a) was skipped in a previous liquidation and b) has pending rewards", async () => {
 				// A, B, C, D, E open vessels
 
@@ -2442,6 +2477,19 @@ contract("VesselManager", async accounts => {
 		// --- batchLiquidateVessels() ---
 
 		describe("Batch Liquidations", async () => {
+			it("batchLiquidateVessels(): reverts when not whitelisted", async () => {
+				await adminContract.setWhitelistedRedeemer(alice, false)
+
+				try {
+					const tx = await vesselManagerOperations.batchLiquidateVessels(erc20.address, [], {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					console.log(err.message)
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
+
 			it("batchLiquidateVessels(): liquidates a Vessel that a) was skipped in a previous liquidation and b) has pending rewards", async () => {
 				// A, B, C, D, E open vessels
 
@@ -3223,7 +3271,6 @@ contract("VesselManager", async accounts => {
 					// skip redemption
 					await time.increase(redemptionWait)
 
-					await adminContract.setWhitelistedRedeemer(dennis, true)
 					// this time tx should succeed
 					await vesselManagerOperations.redeemCollateral(
 						erc20.address,
@@ -3292,7 +3339,6 @@ contract("VesselManager", async accounts => {
 				// Dennis redeems 20 debt tokens
 				// Don't pay for gas, as it makes it easier to calculate the received collateral
 
-				await adminContract.setWhitelistedRedeemer(dennis, true)
 				const redemptionTx = await vesselManagerOperations.redeemCollateral(
 					erc20.address,
 					redemptionAmount,
@@ -3393,7 +3439,6 @@ contract("VesselManager", async accounts => {
 				// skip redemption bootstrapping phase
 				await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-				await adminContract.setWhitelistedRedeemer(dennis, true)
 				// Dennis redeems 20 debt tokens
 				const redemptionTx = await vesselManagerOperations.redeemCollateral(
 					erc20.address,
@@ -3494,7 +3539,6 @@ contract("VesselManager", async accounts => {
 				// skip redemption bootstrapping phase
 				await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-				await adminContract.setWhitelistedRedeemer(dennis, true)
 				// Dennis redeems 20 debt tokens
 				const redemptionTx = await vesselManagerOperations.redeemCollateral(
 					erc20.address,
@@ -3607,7 +3651,6 @@ contract("VesselManager", async accounts => {
 				// Dennis redeems 20 debt tokens
 				// Don't pay for gas, as it makes it easier to calculate the received Ether
 
-				await adminContract.setWhitelistedRedeemer(dennis, true)
 				const redemptionTx = await vesselManagerOperations.redeemCollateral(
 					erc20.address,
 					redemptionAmount,
@@ -3705,7 +3748,6 @@ contract("VesselManager", async accounts => {
 				// skip redemption bootstrapping phase
 				await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-				await adminContract.setWhitelistedRedeemer(flyn, true)
 				// Flyn redeems collateral
 				await vesselManagerOperations.redeemCollateral(
 					erc20.address,
@@ -3802,7 +3844,6 @@ contract("VesselManager", async accounts => {
 
 				// Flyn redeems collateral with only two iterations
 
-				await adminContract.setWhitelistedRedeemer(flyn, true)
 				await vesselManagerOperations.redeemCollateral(
 					erc20.address,
 					attemptedRedemptionAmount_Asset,
@@ -3996,7 +4037,6 @@ contract("VesselManager", async accounts => {
 					// skip redemption bootstrapping phase
 					await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-					await adminContract.setWhitelistedRedeemer(alice, true)
 					// Alice redeems 1 debt token from Carol's Vessel
 					await vesselManagerOperations.redeemCollateral(
 						erc20.address,
@@ -4011,7 +4051,6 @@ contract("VesselManager", async accounts => {
 					)
 				}
 
-				await adminContract.setWhitelistedRedeemer(dennis, true)
 				// Dennis tries to redeem 20 debt tokens
 				const redemptionTx = await vesselManagerOperations.redeemCollateral(
 					erc20.address,
@@ -4140,7 +4179,6 @@ contract("VesselManager", async accounts => {
 				// skip bootstrapping phase
 				await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-				await adminContract.setWhitelistedRedeemer(carol, true)
 				await vesselManagerOperations.redeemCollateral(
 					erc20.address,
 					A_debt_Asset,
@@ -4219,7 +4257,6 @@ contract("VesselManager", async accounts => {
 				// skip bootstrapping phase
 				await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-				await adminContract.setWhitelistedRedeemer(dennis, true)
 				const tx_Asset = await vesselManagerOperations.redeemCollateral(
 					erc20.address,
 					redemptionAmount_Asset,
@@ -4807,7 +4844,6 @@ contract("VesselManager", async accounts => {
 					erin
 				)
 
-				await adminContract.setWhitelistedRedeemer(erin, true)
 				await vesselManagerOperations.redeemCollateral(
 					erc20.address,
 					dec(400, 18),
@@ -4906,7 +4942,6 @@ contract("VesselManager", async accounts => {
 					const { 0: upperPartialRedemptionHint_1_Asset, 1: lowerPartialRedemptionHint_1_Asset } =
 						await sortedVessels.findInsertPosition(erc20.address, partialRedemptionHintNICR_Asset, erin, erin)
 
-					await adminContract.setWhitelistedRedeemer(erin, true)
 					const redemptionTx_Asset = await vesselManagerOperations.redeemCollateral(
 						erc20.address,
 						dec(1000, 18),
@@ -5059,7 +5094,6 @@ contract("VesselManager", async accounts => {
 				// skip redemption bootstrapping phase
 				await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-				await adminContract.setWhitelistedRedeemer(erin, true)
 				// Erin redeems 120 debt tokens
 				await ({ 0: firstRedemptionHint, 1: partialRedemptionHintNewICR } =
 					await vesselManagerOperations.getRedemptionHints(erc20.address, _120_, price, 0))
@@ -5094,7 +5128,6 @@ contract("VesselManager", async accounts => {
 				const { 0: upperPartialRedemptionHint_2, 1: lowerPartialRedemptionHint_2 } =
 					await sortedVessels.findInsertPosition(erc20.address, partialRedemptionHintNewICR, flyn, flyn)
 
-				await adminContract.setWhitelistedRedeemer(flyn, true)
 				const redemption_2 = await vesselManagerOperations.redeemCollateral(
 					erc20.address,
 					_373_,
@@ -5126,7 +5159,6 @@ contract("VesselManager", async accounts => {
 				const { 0: upperPartialRedemptionHint_3, 1: lowerPartialRedemptionHint_3 } =
 					await sortedVessels.findInsertPosition(erc20.address, partialRedemptionHintNewICR, graham, graham)
 
-				await adminContract.setWhitelistedRedeemer(graham, true)
 				const redemption_3 = await vesselManagerOperations.redeemCollateral(
 					erc20.address,
 					_950_,
@@ -6402,7 +6434,6 @@ contract("VesselManager", async accounts => {
 					const { 0: firstRedemptionHint_Asset, 1: partialRedemptionHintNICR_Asset } =
 						await vesselManagerOperations.getRedemptionHints(erc20.address, TRIAmount_Asset, price, 0)
 
-					await adminContract.setWhitelistedRedeemer(alice, true)
 					// Don't pay for gas, as it makes it easier to calculate the received Ether
 					const redemptionTx_Asset = await vesselManagerOperations.redeemCollateral(
 						erc20.address,

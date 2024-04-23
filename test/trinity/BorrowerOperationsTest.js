@@ -40,6 +40,10 @@ const deploy = async (treasury, mintingAccounts) => {
 	vesselManagerOperations = contracts.core.vesselManagerOperations
 	shortTimelock = contracts.core.shortTimelock
 	longTimelock = contracts.core.longTimelock
+
+	for(const account of mintingAccounts) {
+		await adminContract.setWhitelistedRedeemer(account, true)
+	}
 }
 
 contract("BorrowerOperations", async accounts => {
@@ -60,7 +64,7 @@ contract("BorrowerOperations", async accounts => {
 
 	describe("BorrowerOperations Mechanisms", async () => {
 		before(async () => {
-			await deploy(treasury, [])
+			await deploy(treasury, accounts.slice(0, 20))
 
 			TRI_GAS_COMPENSATION_ERC20 = await adminContract.getDebtTokenGasCompensation(erc20.address)
 			MIN_NET_DEBT_ERC20 = await adminContract.getMinNetDebt(erc20.address)
