@@ -347,5 +347,24 @@ contract("BorrowerOperations_Fees", async accounts => {
             const expectedTimestamp = currentTimestamp.sub(currentTimestamp.mod(toBN(SECONDS_IN_ONE_WEEK)))
             assert.isTrue(epoch.eq(expectedTimestamp))
         })
+
+        it('adds to both vessel debt and global debt', async () => {
+            const {activePool, borrowerOperations, vesselManager, erc20} = contracts.core
+            await openVessel(alice)
+    
+    
+            const initialAliceDebt = await vesselManager.getVesselDebt(erc20.address, alice)
+            const initialTotalDebt = await activePool.getDebtTokenBalance(erc20.address)
+    
+            await skipToNextEpoch()
+            await borrowerOperations.collectVesselFee(erc20.address, alice)
+    
+            const newAliceDebt = await vesselManager.getVesselDebt(erc20.address, alice)
+            const newGlobalDebt = await activePool.getDebtTokenBalance(erc20.address)
+    
+    
+            assert.equal(newAliceDebt.toString(), getDebtWithFee(initialAliceDebt).toString())
+            assert.equal(newGlobalDebt.toString(), getDebtWithFee(initialTotalDebt).toString())
+        })
     })
 })
