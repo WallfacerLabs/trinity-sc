@@ -334,7 +334,7 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 	function _triggerBorrowingFee(address _asset, address _borrower, uint256 _debtTokenAmount) internal returns (uint256) {
 		uint256 debtTokenFee = IVesselManager(vesselManager).getBorrowingFee(_asset, _debtTokenAmount);
-		IDebtToken(debtToken).mint(_asset, treasuryAddress, debtTokenFee);
+		IDebtToken(debtToken).mint(_asset, distributorAddress, debtTokenFee);
 		_updateVesselEpoch(_asset, _borrower);
 		emit BorrowingFeePaid(_asset, _borrower, debtTokenFee);
 		return debtTokenFee;

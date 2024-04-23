@@ -411,7 +411,7 @@ contract("SortedVessels", async accounts => {
 			sortedVesselsTester = await SortedVesselsTester.new()
 			await sortedVessels.initialize()
 
-			const addresses = new Array(14).fill(sortedVesselsTester.address, 0)
+			const addresses = new Array(15).fill(sortedVesselsTester.address, 0)
 			await sortedVessels.setAddresses(addresses)
 
 			await sortedVesselsTester.setSortedVessels(sortedVessels.address)

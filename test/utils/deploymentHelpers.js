@@ -110,6 +110,7 @@ class DeploymentHelper {
 				core.collSurplusPool.address,
 				core.debtToken.address,
 				core.defaultPool.address,
+				treasuryAddress,
 				core.gasPool.address,
 				core.priceFeedTestnet.address,
 				core.sortedVessels.address,
