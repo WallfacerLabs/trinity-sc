@@ -21,7 +21,7 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 	uint256 private constant DEFAULT_DECIMALS = 18;
 
 	uint256 public constant BORROWING_FEE_DEFAULT = 0.005 ether; // 0.5%
-	uint256 public constant CCR_DEFAULT = 1.5 ether; // 150%
+	uint256 public constant CCR_DEFAULT = 0; // 0%
 	uint256 public constant MCR_DEFAULT = 1.1 ether; // 110%
 	uint256 public constant MIN_NET_DEBT_DEFAULT = 2_000 ether;
 	uint256 public constant MINT_CAP_DEFAULT = 1_000_000 ether; // 1 million TRI
@@ -178,7 +178,7 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		public
 		override
 		onlyTimelock
-		safeCheck("CCR", _collateral, newCCR, 1 ether, 10 ether) // 100% - 1,000%
+		safeCheck("CCR", _collateral, newCCR, 0, 10 ether) // 100% - 1,000%
 	{
 		CollateralParams storage collParams = collateralParams[_collateral];
 		uint256 oldCCR = collParams.ccr;
