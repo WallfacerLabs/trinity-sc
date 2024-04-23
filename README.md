@@ -10,7 +10,6 @@ their collateral without paying interest.
     - [Core Smart Contracts](#core-smart-contracts)
     - [Data and Value Silo Contracts](#data-and-value-silo-contracts)
   - [Smart Contract changes from Vesta](#smart-contract-changes-from-vesta)
-  - [Fee Model](#fee-model)
   - [Development](#development)
     - [Clone \& Install](#clone--install)
     - [Deploy to a local node](#deploy-to-a-local-node)
@@ -49,9 +48,9 @@ The three main contracts - `BorrowerOperations.sol`, `VesselManager.sol` and `St
 
 `AdminContract.sol` - contains all the functions to create a new collateral or modify its parameters. It is called by the other contracts to check if a collateral is valid and what are their parameters.
 
-`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their Vessel: Vessel creation, collateral top-up / withdrawal, debt token issuance and repayment. It also sends issuance fees to the `FeeCollector` contract. BorrowerOperations functions call in to VesselManager, telling it to update Vessel state, where necessary. BorrowerOperations functions also call in to the various Pools, telling them to move tokens between Pools or between Pool <> user, where necessary.
+`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their Vessel: Vessel creation, collateral top-up / withdrawal, debt token issuance and repayment. BorrowerOperations functions call in to VesselManager, telling it to update Vessel state, where necessary. BorrowerOperations functions also call in to the various Pools, telling them to move tokens between Pools or between Pool <> user, where necessary.
 
-`VesselManager.sol` and `VesselManagerOperations.sol` - contain functionality for liquidations and redemptions. They send redemption fees to the `FeeCollector` contract. Also contain the state of each Vessel - i.e. a record of the Vessel’s collateral and debt. VesselManager does not hold value (i.e. tokens). VesselManager functions call in to the various Pools to tell them to move tokens between Pools, where necessary.
+`VesselManager.sol` and `VesselManagerOperations.sol` - contain functionality for liquidations and redemptions. Also contain the state of each Vessel - i.e. a record of the Vessel’s collateral and debt. VesselManager does not hold value (i.e. tokens). VesselManager functions call in to the various Pools to tell them to move tokens between Pools, where necessary.
 
 `TrinityBase.sol` - Both VesselManager and BorrowerOperations inherit from this parent contract, which contains some common functions.
 
@@ -98,8 +97,6 @@ The general changes in the design are the following:
 
 `DefaultPool` - no major changes
 
-`FeeCollector` - new contract, see [Fee Model](#fee-model)
-
 `GasPool` - no changes
 
 `TrinityBase` - no changes
@@ -117,35 +114,6 @@ The general changes in the design are the following:
 `VesselManager` - heavy refactoring
 
 `VesselManagerOperations` - heavy refactoring. HintHelpers was added here
-
-
-***
-
-## Fee Model
-
-Users interact with the system through the `BorrowerOperations` contract. There are three basic actions they can perform: 
-
-1) the `openVessel()` method allows them to borrow debt tokens by depositing eligible assets as collateral; 
-2) then they can either increase their debt position (by borrowing more debt tokens, which may or may not require more deposited collateral) or decrease their debt by repaying debt tokens - both actions are performed by the `adjustVessel()` method;
-3) Finally, they can call `closeVessel()` by repaying the debt in full, which will end their loan.
-
-This contract will mint both the required debt tokens requested by the user and the borrowing fee, and will transfer this fee to `FeeCollector.sol`, calling its `increaseDebt()` and `decreaseDebt()` methods accordingly.
-
-The business rules for the `FeeCollector` contract are as follows:
-
-* a standard 0,5% borrowing fee is charged upfront on each new debt (or debt increase): if Alice borrows $200,000 debt tokens, a $1,000 fee is sent to the fee contract (`increaseDebt(alice, 1000)`), and Alice now owes the platform $201,000
-* the fee is refunded if the user repays his debt before the expiry of six months (~182 days), pro rata for the time elapsed, but the minimum fee corresponds to one week of interest
-* the contract controls this decaying refund by immediately remitting the minimum fee (either to the Treasury or to a staking contract) and maintaining a record that includes (a) the refund balance (`amount`) (b) the timestamp of the last change in the amount (`from`) (c) the timestamp of expiry date (`to`): in Alice's case, on day 1, the platform collects 1/26 (one week out of 26) of $1,000, or about $38, and creates a record for her credit of $962, which decays/expires from day 7 to day 182
-* if Alice repays her debt within days 1 through 7, the platform retains the minimum fee and reimburses her for the outstanding balance; if she repays within days 8 through 182, the reimbursement is prorated; after that, she is no longer entitled to reimbursement
-* each time the methods `increaseDebt()` and `decreaseDebt()` are called, the prorated expired balance is collected by the platform; refunds that have been expired without repayment or expired pro rata fees during the term of the loan may also be collected, but are controlled off-chain
-
-Special cases:
-
-* if you make an additional loan before the original refund has expired, all control variables are changed; the new `from` becomes the current timestamp; the new `amount` is the unexpired portion of the previous balance plus the newly added fee; the new `to` is calculated based on the weight of the addition compared to the original balance and its remaining expiration time
-* no changes are made to the `from` (starting point for expiration) if additions are made within the first week of lending
-* the following diagram describes the behaviour: A refund of $10,000 falls linearly to $0 by day 175 (red line); halfway through (the remaining balance is now $5,000), the user acquires a new debt that entitles him to a new refund of $5,000, from day 87 to day 262 (blue line); the combined result is a refund of $10,000 that falls off faster (green line), based on the weight of that addition against the remaining balance/time.
-
-![Trinity's fee model](images/fee-model.jpg)
 
 ***
 

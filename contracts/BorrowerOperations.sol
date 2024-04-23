@@ -469,7 +469,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 	function _repayDebtTokens(address _asset, address _account, uint256 _debtTokenAmount) internal {
 		/// @dev the borrowing fee partial refund is accounted for when decreasing the debt, as it was included when vessel was opened
 		IActivePool(activePool).decreaseDebt(_asset, _debtTokenAmount);
-		/// @dev the borrowing fee partial refund is not burned here, as it has already been burned by the FeeCollector
 		IDebtToken(debtToken).burn(_account, _debtTokenAmount);
 	}
 
