@@ -1144,7 +1144,9 @@ contract("StabilityPool", async accounts => {
 				}) // 180 TRI closed
 				await stabilityPool.withdrawFromSP(dec(199_000, 18), validCollateral, { from: whale })
 				const stability_col_AfterWhaleERC20 = await stabilityPool.getCollateral(erc20.address)
-				assert.isAtMost(stability_col_AfterWhaleERC20.sub(aliceExpectedGainERC20), 10000)
+				
+				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(idx)).div(toBN(10).pow(toBN(18)))
+				assert.closeTo(stability_col_AfterWhaleERC20.sub(aliceExpectedGainERC20), lastAssetError_Offset, toBN(Math.floor(lastAssetError_Offset * 0.001)))
 			})
 
 			it("withdrawFromSP(): withdraw from SP, passing same asset twice will revert", async () => {

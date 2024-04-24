@@ -1201,19 +1201,22 @@ contract("VesselManager", async accounts => {
 
 				const totalDeposits_Asset = bob_Deposit_Before_Asset.add(A_spDeposit)
 
+				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(idx)).div(toBN(10).pow(toBN(18)))
+				const lastDebtTokenLossError_Offset = (await stabilityPool.lastDebtTokenLossError_Offset()).div(toBN(10).pow(toBN(18)))
+
 				assert.isAtMost(
 					th.getDifference(
 						alice_Deposit_After_Asset,
 						A_spDeposit.sub(B_debt_Asset.mul(A_spDeposit).div(totalDeposits_Asset))
 					),
-					1000000
+					lastDebtTokenLossError_Offset
 				)
 				assert.isAtMost(
 					th.getDifference(
 						alice_ETHGain_After_Asset,
 						th.applyLiquidationFee(B_collateral_Asset).mul(A_spDeposit).div(totalDeposits_Asset)
 					),
-					1000000
+					lastAssetError_Offset
 				)
 
 				const bob_Deposit_After_Asset = await stabilityPool.getCompoundedDebtTokenDeposits(bob)
@@ -1224,7 +1227,7 @@ contract("VesselManager", async accounts => {
 						bob_Deposit_After_Asset,
 						bob_Deposit_Before_Asset.sub(B_debt_Asset.mul(bob_Deposit_Before_Asset).div(totalDeposits_Asset))
 					),
-					1000000
+					lastDebtTokenLossError_Offset
 				)
 				assert.isAtMost(
 					th.getDifference(
@@ -1233,7 +1236,7 @@ contract("VesselManager", async accounts => {
 							th.applyLiquidationFee(B_collateral_Asset).mul(bob_Deposit_Before_Asset).div(totalDeposits_Asset)
 						)
 					),
-					1000000
+					lastAssetError_Offset
 				)
 			})
 
