@@ -255,7 +255,7 @@ contract("VesselManager", async accounts => {
 				const defaultPool_ETH_After_Asset = (await defaultPool.getAssetBalance(erc20.address)).toString()
 				const defaultPool_RawEther_After_Asset = (await erc20.balanceOf(defaultPool.address)).toString()
 				const defaultPooL_TRIDebt_After_Asset = (await defaultPool.getDebtTokenBalance(erc20.address)).toString()
-				const defaultPool_ETH_Asset = th.applyLiquidationFee(B_collateral_Asset)
+				const defaultPool_ETH_Asset = B_collateral_Asset
 				assert.equal(defaultPool_ETH_After_Asset, defaultPool_ETH_Asset)
 				assert.equal(defaultPool_RawEther_After_Asset, defaultPool_ETH_Asset)
 				th.assertIsApproximatelyEqual(defaultPooL_TRIDebt_After_Asset, B_totalDebt_Asset)
@@ -430,7 +430,7 @@ contract("VesselManager", async accounts => {
 				assert.equal(totalStakesSnapshot_After_Asset, A_collateral_Asset)
 				assert.equal(
 					totalCollateralSnapshot_After_Asset,
-					A_collateral_Asset.add(th.applyLiquidationFee(B_collateral_Asset))
+					A_collateral_Asset.add(B_collateral_Asset)
 				)
 			})
 
@@ -469,8 +469,7 @@ contract("VesselManager", async accounts => {
 				const L_ETH_AfterCarolLiquidated_Asset = await vesselManager.L_Colls(erc20.address)
 				const L_TRIDebt_AfterCarolLiquidated_Asset = await vesselManager.L_Debts(erc20.address)
 
-				const L_ETH_expected_1_Asset = th
-					.applyLiquidationFee(C_collateral_Asset)
+				const L_ETH_expected_1_Asset = C_collateral_Asset
 					.mul(mv._1e18BN)
 					.div(A_collateral_Asset.add(B_collateral_Asset))
 				const L_TRIDebt_expected_1_Asset = C_totalDebt_Asset.mul(mv._1e18BN).div(
@@ -513,10 +512,9 @@ contract("VesselManager", async accounts => {
    L_TRIDebt = (180 / 20) + (890 / 10) = 98 TRI */
 
 				const L_ETH_expected_2_Asset = L_ETH_expected_1_Asset.add(
-					th
-						.applyLiquidationFee(B_collateral_Asset.add(B_collateral_Asset.mul(L_ETH_expected_1_Asset).div(mv._1e18BN)))
-						.mul(mv._1e18BN)
-						.div(A_collateral_Asset)
+					B_collateral_Asset.add(B_collateral_Asset.mul(L_ETH_expected_1_Asset).div(mv._1e18BN))
+					.mul(mv._1e18BN)
+					.div(A_collateral_Asset)
 				)
 				const L_TRIDebt_expected_2 = L_TRIDebt_expected_1_Asset.add(
 					B_totalDebt_Asset.add(B_increasedTotalDebt_Asset)
@@ -1169,7 +1167,7 @@ contract("VesselManager", async accounts => {
 				const bob_ETHGain_Before_Asset = (await stabilityPool.getDepositorGains(bob, validCollateral))[1][idx]
 
 				assert.isAtMost(th.getDifference(bob_Deposit_Before_Asset, B_spDeposit.sub(C_debt_Asset)), 1000000)
-				assert.isAtMost(th.getDifference(bob_ETHGain_Before_Asset, th.applyLiquidationFee(C_collateral_Asset)), 1000)
+				assert.isAtMost(th.getDifference(bob_ETHGain_Before_Asset, C_collateral_Asset), 1000)
 
 				// Alice provides TRI to SP
 				await stabilityPool.provideToSP(A_spDeposit, validCollateral, { from: alice })
@@ -1214,7 +1212,7 @@ contract("VesselManager", async accounts => {
 				assert.isAtMost(
 					th.getDifference(
 						alice_ETHGain_After_Asset,
-						th.applyLiquidationFee(B_collateral_Asset).mul(A_spDeposit).div(totalDeposits_Asset)
+						B_collateral_Asset.mul(A_spDeposit).div(totalDeposits_Asset)
 					),
 					lastAssetError_Offset
 				)
@@ -1233,7 +1231,7 @@ contract("VesselManager", async accounts => {
 					th.getDifference(
 						bob_ETHGain_After_Asset,
 						bob_ETHGain_Before_Asset.add(
-							th.applyLiquidationFee(B_collateral_Asset).mul(bob_Deposit_Before_Asset).div(totalDeposits_Asset)
+							B_collateral_Asset.mul(bob_Deposit_Before_Asset).div(totalDeposits_Asset)
 						)
 					),
 					lastAssetError_Offset
@@ -2274,7 +2272,7 @@ contract("VesselManager", async accounts => {
 					th.getDifference(
 						TCR_After_Asset,
 						totalCollNonDefaulters_Asset
-							.add(th.applyLiquidationFee(totalCollDefaulters_Asset))
+							.add(totalCollDefaulters_Asset)
 							.mul(price)
 							.div(totalDebt_Asset)
 					),
@@ -2413,21 +2411,21 @@ contract("VesselManager", async accounts => {
 				assert.isAtMost(
 					th.getDifference(
 						whale_ETHGain_Asset,
-						th.applyLiquidationFee(liquidatedColl_Asset).mul(whaleDeposit).div(totalDeposits_Asset)
+						liquidatedColl_Asset.mul(whaleDeposit).div(totalDeposits_Asset)
 					),
 					100000
 				)
 				assert.isAtMost(
 					th.getDifference(
 						alice_ETHGain_Asset,
-						th.applyLiquidationFee(liquidatedColl_Asset).mul(A_deposit).div(totalDeposits_Asset)
+						liquidatedColl_Asset.mul(A_deposit).div(totalDeposits_Asset)
 					),
 					100000
 				)
 				assert.isAtMost(
 					th.getDifference(
 						bob_ETHGain_Asset,
-						th.applyLiquidationFee(liquidatedColl_Asset).mul(B_deposit).div(totalDeposits_Asset)
+						liquidatedColl_Asset.mul(B_deposit).div(totalDeposits_Asset)
 					),
 					100000
 				)
@@ -2438,7 +2436,7 @@ contract("VesselManager", async accounts => {
 				const total_ETHinSP_Asset = (await stabilityPool.getCollateral(erc20.address)).toString()
 
 				assert.isAtMost(th.getDifference(total_TRIinSP_Asset, totalDeposits_Asset.sub(liquidatedDebt_Asset)), 1000)
-				assert.isAtMost(th.getDifference(total_ETHinSP_Asset, th.applyLiquidationFee(liquidatedColl_Asset)), 1000)
+				assert.isAtMost(th.getDifference(total_ETHinSP_Asset, liquidatedColl_Asset), 1000)
 			})
 		})
 

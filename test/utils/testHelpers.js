@@ -208,9 +208,6 @@ class TestHelper {
 		return gas
 	}
 
-	static applyLiquidationFee(ethAmount) {
-		return ethAmount
-	}
 	// --- Logging functions ---
 
 	static logGasMetrics(gasResults, message) {
