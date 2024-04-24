@@ -1367,7 +1367,6 @@ class TestHelper {
 			approxPartialRedemptionHint
 		)
 
-		await contracts.adminContract.setWhitelistedRedeemer(redeemer, true)
 		const tx = await contracts.vesselManagerOperations.redeemCollateral(
 			asset,
 			TRIAmount,

@@ -4281,6 +4281,32 @@ contract("VesselManager", async accounts => {
 				th.assertIsApproximatelyEqual(dennis_Debt_After_Asset, D_totalDebt_Asset)
 			})
 
+			it("redeemCollateral(): reverts when not whitelisted", async () => {
+				await openVessel({
+					asset: erc20.address,
+					ICR: toBN(dec(200, 16)),
+					extraParams: { from: alice },
+				})
+				await openVessel({
+					asset: erc20.address,
+					ICR: toBN(dec(200, 16)),
+					extraParams: { from: bob },
+				})
+
+				// skip bootstrapping phase
+				await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+				await adminContract.setWhitelistedRedeemer(alice, false)
+
+				try {
+					const tx = await th.redeemCollateralAndGetTxObject(alice, contracts.core, dec(10, 18), erc20.address)
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__RedemptorNotWhitelisted()")
+				}
+			})
+
 			it("redeemCollateral(): reverts when TCR < MCR", async () => {
 				await openVessel({
 					asset: erc20.address,
