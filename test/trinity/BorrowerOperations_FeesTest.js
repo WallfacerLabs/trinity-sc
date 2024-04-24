@@ -10,7 +10,7 @@ const {_1e18BN} = testHelpers.MoneyValues
 
 
 contract("BorrowerOperations_Fees", async accounts => {
-    const [owner, alice, treasury] = accounts
+    const [owner, alice, bob, treasury] = accounts
 
     let contracts
     let snapshotId
@@ -27,6 +27,17 @@ contract("BorrowerOperations_Fees", async accounts => {
         return borrowerOperations.openVessel(erc20.address, vesselColl, vesselTRIAmount_Asset, constants.AddressZero, constants.AddressZero, {
             from: account,
         })
+    }
+
+    async function closeVessel(account) {
+        const {borrowerOperations, erc20} = contracts.core
+        return borrowerOperations.closeVessel(erc20.address, {
+            from: account,
+        })
+    }
+
+    async function mintDebtTokens(account, amount) {
+        return contracts.core.debtToken.unprotectedMint(account, amount)
     }
 
     async function skipToNextEpoch() {
@@ -193,6 +204,43 @@ contract("BorrowerOperations_Fees", async accounts => {
             const currentTimestamp = th.toBN(await th.getLatestBlockTimestamp(web3))
             const expectedTimestamp = currentTimestamp.sub(currentTimestamp.mod(toBN(SECONDS_IN_ONE_WEEK)))
             assert.isTrue(epoch.eq(expectedTimestamp))
+        })
+    })
+
+    describe('closeVessel', () => {
+        it('does not add fees mid epoch', async () => {
+            const {erc20, debtToken, borrowerOperations} = contracts.core
+            await openVessel(alice)
+            await openVessel(bob)
+            await skipToNextEpoch()
+
+            await borrowerOperations.collectVesselFee(erc20.address, alice)
+            
+            const treasuryBalanceBefore = await debtToken.balanceOf(treasury)
+
+            await mintDebtTokens(alice, vesselTotalDebt)
+            await closeVessel(alice)
+
+            const treasuryBalanceAfter = await debtToken.balanceOf(treasury)
+
+            assert.isTrue(treasuryBalanceBefore.eq(treasuryBalanceAfter))
+        })
+
+        it('skips due fee payment when called before collectVesselFee', async () => {
+            const {debtToken} = contracts.core
+            await openVessel(alice)
+            await openVessel(bob)
+
+            const treasuryBalanceBefore = await debtToken.balanceOf(treasury)
+
+            await skipToNextEpoch()
+
+            await mintDebtTokens(alice, vesselTotalDebt)
+            await closeVessel(alice)
+
+            const treasuryBalanceAfter = await debtToken.balanceOf(treasury)
+
+            assert.isTrue(treasuryBalanceBefore.eq(treasuryBalanceAfter))
         })
     })
 
