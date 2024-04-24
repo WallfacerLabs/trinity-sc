@@ -51,6 +51,7 @@ interface IVesselManagerOperations is ITrinityBase {
 	error VesselManagerOperations__InvalidParam();
 	error VesselManagerOperations__NotTimelock();
 	error VesselManagerOperations__LiquidatorNotWhitelisted();
+	error VesselManagerOperations__RedemptorNotWhitelisted();
 
 	// Structs ----------------------------------------------------------------------------------------------------------
 
