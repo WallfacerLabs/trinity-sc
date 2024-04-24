@@ -223,7 +223,7 @@ contract("BorrowerOperations_Fees", async accounts => {
 
             const treasuryBalanceAfter = await debtToken.balanceOf(treasury)
 
-            assert.isTrue(treasuryBalanceBefore.eq(treasuryBalanceAfter))
+            assert.equal(treasuryBalanceBefore.toString(), treasuryBalanceAfter.toString())
         })
 
         it('skips due fee payment when called before collectVesselFee', async () => {
@@ -240,7 +240,7 @@ contract("BorrowerOperations_Fees", async accounts => {
 
             const treasuryBalanceAfter = await debtToken.balanceOf(treasury)
 
-            assert.isTrue(treasuryBalanceBefore.eq(treasuryBalanceAfter))
+            assert.equal(treasuryBalanceBefore.toString(), treasuryBalanceAfter.toString())
         })
     })
 
