@@ -59,7 +59,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 	 * starting from the one with the lowest collateral ratio in the system, and moving upwards.
 	 */
 	function liquidateVessels(address _asset, uint256 _n) external override nonReentrant {
-		if(!IAdminContract(adminContract).getRedeemerIsWhitelisted(msg.sender)) {
+		if (!IAdminContract(adminContract).getRedeemerIsWhitelisted(msg.sender)) {
 			revert VesselManagerOperations__LiquidatorNotWhitelisted();
 		}
 
@@ -114,10 +114,9 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 	 * Attempt to liquidate a custom list of vessels provided by the caller.
 	 */
 	function batchLiquidateVessels(address _asset, address[] memory _vesselArray) public override nonReentrant {
-		if(!IAdminContract(adminContract).getRedeemerIsWhitelisted(msg.sender)) {
+		if (!IAdminContract(adminContract).getRedeemerIsWhitelisted(msg.sender)) {
 			revert VesselManagerOperations__LiquidatorNotWhitelisted();
 		}
-		require(IAdminContract(adminContract).getRedeemerIsWhitelisted(msg.sender), "VesselManagerOperations: Liquidator not whitelisted");
 		if (_vesselArray.length == 0 || _vesselArray.length > BATCH_SIZE_LIMIT) {
 			revert VesselManagerOperations__InvalidArraySize();
 		}
@@ -878,7 +877,10 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		uint256 _price
 	) internal view {
 		address redeemer = msg.sender;
-		require(IAdminContract(adminContract).getRedeemerIsWhitelisted(redeemer), "VesselManagerOperations: Redeemer not whitelisted");
+		require(
+			IAdminContract(adminContract).getRedeemerIsWhitelisted(redeemer),
+			"VesselManagerOperations: Redeemer not whitelisted"
+		);
 
 		uint256 redemptionBlockTimestamp = IAdminContract(adminContract).getRedemptionBlockTimestamp(_asset);
 		if (redemptionBlockTimestamp > block.timestamp) {
