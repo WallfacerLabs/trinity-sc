@@ -47,7 +47,8 @@ const deploy = async (treasury, mintingAccounts) => {
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
 
 	for(const account of mintingAccounts) {
-		await adminContract.setWhitelistedRedeemer(account, true)
+		await adminContract.setWhitelistedLiquidator(account, true)
+		await adminContract.setAddressCollateralWhitelisted(erc20.address, account, true)
 	}
 }
 
@@ -137,7 +138,7 @@ contract("VesselManager", async accounts => {
 					extraParams: { from: alice },
 				})
 
-				await adminContract.setWhitelistedRedeemer(alice, false)
+				await adminContract.setWhitelistedLiquidator(alice, false)
 
 				try {
 					const tx = await vesselManagerOperations.liquidate(erc20.address, alice, {from: alice})
@@ -1435,7 +1436,7 @@ contract("VesselManager", async accounts => {
 			// --- liquidateVessels() ---
 
 			it("liquidateVessels(): reverts when not whitelisted", async () => {
-				await adminContract.setWhitelistedRedeemer(alice, false)
+				await adminContract.setWhitelistedLiquidator(alice, false)
 	
 				try {
 					const tx = await vesselManagerOperations.liquidateVessels(erc20.address, 2, {from: alice})
@@ -2477,7 +2478,7 @@ contract("VesselManager", async accounts => {
 
 		describe("Batch Liquidations", async () => {
 			it("batchLiquidateVessels(): reverts when not whitelisted", async () => {
-				await adminContract.setWhitelistedRedeemer(alice, false)
+				await adminContract.setWhitelistedLiquidator(alice, false)
 
 				try {
 					const tx = await vesselManagerOperations.batchLiquidateVessels(erc20.address, [], {from: alice})
@@ -4296,14 +4297,14 @@ contract("VesselManager", async accounts => {
 				// skip bootstrapping phase
 				await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-				await adminContract.setWhitelistedRedeemer(alice, false)
+				await adminContract.setAddressCollateralWhitelisted(erc20.address, alice, false)
 
 				try {
 					const tx = await th.redeemCollateralAndGetTxObject(alice, contracts.core, dec(10, 18), erc20.address)
 					assert.isFalse(tx.receipt.status)
 				} catch (err) {
 					assert.include(err.message, "revert")
-					assert.include(err.message, "VesselManagerOperations__RedemptorNotWhitelisted()")
+					assert.include(err.message, "VesselManagerOperations__CollateralAddressNotWhitelisted()")
 				}
 			})
 

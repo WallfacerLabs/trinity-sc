@@ -34,7 +34,7 @@ const deploy = async (treasury, mintingAccounts) => {
 	validCollateral = await adminContract.getValidCollateral()
 
 	for(const account of mintingAccounts) {
-		await adminContract.setWhitelistedRedeemer(account, true)
+		await adminContract.setWhitelistedLiquidator(account, true)
 	}
 }
 

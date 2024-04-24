@@ -32,9 +32,7 @@ interface IVesselManagerOperations is ITrinityBase {
 		IVesselManager.VesselManagerOperation _operation
 	);
 
-	event RedemptionSoftenParamChanged(
-		uint256 _redemptionSofteningParam
-	);
+	event RedemptionSoftenParamChanged(uint256 _redemptionSofteningParam);
 
 	// Custom Errors ----------------------------------------------------------------------------------------------------
 
@@ -51,7 +49,7 @@ interface IVesselManagerOperations is ITrinityBase {
 	error VesselManagerOperations__InvalidParam();
 	error VesselManagerOperations__NotTimelock();
 	error VesselManagerOperations__LiquidatorNotWhitelisted();
-	error VesselManagerOperations__RedemptorNotWhitelisted();
+	error VesselManagerOperations__CollateralAddressNotWhitelisted();
 
 	// Structs ----------------------------------------------------------------------------------------------------------
 

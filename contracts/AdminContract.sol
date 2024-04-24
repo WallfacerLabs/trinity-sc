@@ -38,7 +38,9 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 	 */
 	mapping(address => CollateralParams) internal collateralParams;
 
-	mapping(address => bool) internal whitelistedRedeemers;
+	mapping(address => bool) internal whitelistedLiquidators;
+
+	mapping(address => mapping(address => bool)) internal collateralWhitelistedAddresses;
 
 	// list of all collateral types in collateralParams (active and deprecated)
 	// Addresses for easy access
@@ -248,9 +250,18 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		emit RedemptionBlockTimestampChanged(_collateral, _blockTimestamp);
 	}
 
-	function setWhitelistedRedeemer(address _redeemer, bool _whitelisted) external onlyTimelock {
-		whitelistedRedeemers[_redeemer] = _whitelisted;
-		emit RedeemerWhitelisted(_redeemer, _whitelisted);
+	function setWhitelistedLiquidator(address _liquidator, bool _whitelisted) external onlyTimelock {
+		whitelistedLiquidators[_liquidator] = _whitelisted;
+		emit LiquidatorWhitelisted(_liquidator, _whitelisted);
+	}
+
+	function setAddressCollateralWhitelisted(
+		address _collateral,
+		address _address,
+		bool _whitelisted
+	) external onlyTimelock {
+		collateralWhitelistedAddresses[_collateral][_address] = _whitelisted;
+		emit CollateralAddressWhitelisted(_collateral, _address, _whitelisted);
 	}
 
 	function setRedemptionBaseFeeEnabled(address _collateral, bool _enabled) external onlyTimelock {
@@ -329,8 +340,12 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		return IActivePool(activePool).getDebtTokenBalance(_asset) + IDefaultPool(defaultPool).getDebtTokenBalance(_asset);
 	}
 
-	function getRedeemerIsWhitelisted(address _redeemer) external view returns (bool) {
-		return whitelistedRedeemers[_redeemer];
+	function getLiquidatorIsWhitelisted(address _liquidator) external view returns (bool) {
+		return whitelistedLiquidators[_liquidator];
+	}
+
+	function getCollateralAddressIsWhitelisted(address _collateral, address _address) external view returns (bool) {
+		return collateralWhitelistedAddresses[_collateral][_address];
 	}
 
 	function getRedemptionBaseFeeEnabled(address _collateral) external view override returns (bool) {

@@ -42,7 +42,7 @@ const deploy = async (treasury, mintingAccounts) => {
 	longTimelock = contracts.core.longTimelock
 
 	for(const account of mintingAccounts) {
-		await adminContract.setWhitelistedRedeemer(account, true)
+		await adminContract.setWhitelistedLiquidator(account, true)
 	}
 }
 

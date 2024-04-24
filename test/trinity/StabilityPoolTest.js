@@ -38,7 +38,7 @@ const deploy = async (treasury, mintingAccounts) => {
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
 
 	for(const account of mintingAccounts) {
-		await adminContract.setWhitelistedRedeemer(account, true)
+		await adminContract.setWhitelistedLiquidator(account, true)
 	}
 }
 
