@@ -8,8 +8,8 @@ var snapshotId
 var initialSnapshotId
 
 const openVessel = async params => th.openVessel(contracts.core, params)
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -30,7 +30,7 @@ const deploy = async (treasury, mintingAccounts) => {
 }
 
 contract("AdminContract", async accounts => {
-	const [owner, user, A, C, B, treasury] = accounts
+	const [owner, user, A, C, B, treasury, distributor] = accounts
 
 	let BORROWING_FEE
 	let CCR
@@ -59,7 +59,7 @@ contract("AdminContract", async accounts => {
 	const REDEMPTION_FEE_FLOOR_SAFETY_MIN = toBN('0') // 0%
 
 	before(async () => {
-		await deploy(treasury, accounts.slice(0, 5))
+		await deploy(treasury, distributor, accounts.slice(0, 5))
 
 		BORROWING_FEE = await adminContract.BORROWING_FEE_DEFAULT()
 		CCR = await adminContract.CCR_DEFAULT()

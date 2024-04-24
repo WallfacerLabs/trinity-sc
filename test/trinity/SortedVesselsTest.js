@@ -12,8 +12,8 @@ var snapshotId
 var initialSnapshotId
 
 const openVessel = async params => th.openVessel(contracts.core, params)
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -56,12 +56,12 @@ contract("SortedVessels", async accounts => {
 		}
 	}
 
-	const [alice, bob, carol, dennis, erin, defaulter_1, A, B, C, D, E, F, G, H, I, J, whale, treasury] = accounts
+	const [alice, bob, carol, dennis, erin, defaulter_1, A, B, C, D, E, F, G, H, I, J, whale, treasury, distributor] = accounts
 
 	describe("SortedVessels", () => {
 
 		before(async () => {
-			await deploy(treasury, accounts.slice(0, 20))
+			await deploy(treasury, distributor, accounts.slice(0, 20))
 			initialSnapshotId = await network.provider.send("evm_snapshot")
 		})
 

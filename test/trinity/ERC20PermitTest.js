@@ -16,11 +16,11 @@ var snapshotId
 var initialSnapshotId
 
 contract("ERC20Permit", async accounts => {
-	const [owner, alice, bob, carol, treasury] = accounts
+	const [owner, alice, bob, carol, treasury, distributor] = accounts
 	let debtToken, grvtToken
 
 	before(async () => {
-		contracts = await deploymentHelper.deployTestContracts(treasury, [])
+		contracts = await deploymentHelper.deployTestContracts(treasury, distributor, [])
 		debtToken = contracts.core.debtToken
 
 		await debtToken.unprotectedMint(alice, dec(150, 18))

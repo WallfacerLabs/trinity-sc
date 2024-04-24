@@ -20,8 +20,8 @@ var snapshotId
 var initialSnapshotId
 var validCollateral
 
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -84,6 +84,7 @@ contract("VesselManager", async accounts => {
 		D,
 		E,
 		treasury,
+		distributor,
 	] = accounts
 
 	const multisig = accounts[999]
@@ -100,7 +101,7 @@ contract("VesselManager", async accounts => {
 
 	describe("Vessel Manager", async () => {
 		before(async () => {
-			await deploy(treasury, accounts.slice(0, 20))
+			await deploy(treasury, distributor, accounts.slice(0, 20))
 
 			// give some gas to the contracts that will be impersonated
 			setBalance(adminContract.address, 1e18)

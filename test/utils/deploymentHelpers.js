@@ -26,9 +26,9 @@ const TIMELOCK_LONG_DELAY = 86400 * 7
  * Deploys Trinity's contracts to Hardhat TEST env
  */
 class DeploymentHelper {
-	static async deployTestContracts(treasuryAddress, collateralMintingAccounts = []) {
+	static async deployTestContracts(treasuryAddress, distributorAddress, collateralMintingAccounts = []) {
 		const core = await this._deployCoreContracts(treasuryAddress)
-		await this._connectCoreContracts(core, treasuryAddress)
+		await this._connectCoreContracts(core, treasuryAddress, distributorAddress)
 		await this._connectGrvtContracts(core)
 
 		for (const acc of collateralMintingAccounts) {
@@ -101,7 +101,7 @@ class DeploymentHelper {
 	/**
 	 * Connects contracts to their dependencies.
 	 */
-	static async _connectCoreContracts(core, treasuryAddress) {
+	static async _connectCoreContracts(core, treasuryAddress, distributorAddress) {
 		const setAddresses = async contract => {
 			const addresses = [
 				core.activePool.address,
@@ -110,7 +110,7 @@ class DeploymentHelper {
 				core.collSurplusPool.address,
 				core.debtToken.address,
 				core.defaultPool.address,
-				treasuryAddress,
+				distributorAddress,
 				core.gasPool.address,
 				core.priceFeedTestnet.address,
 				core.sortedVessels.address,
