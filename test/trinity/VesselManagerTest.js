@@ -1441,7 +1441,6 @@ contract("VesselManager", async accounts => {
 					const tx = await vesselManagerOperations.liquidateVessels(erc20.address, 2, {from: alice})
 					assert.isFalse(tx.receipt.status)
 				} catch (err) {
-					console.log(err.message)
 					assert.include(err.message, "revert")
 					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
 				}
