@@ -19,9 +19,7 @@ interface IVesselManagerOperations is ITrinityBase {
 	event Liquidation(
 		address indexed _asset,
 		uint256 _liquidatedDebt,
-		uint256 _liquidatedColl,
-		uint256 _collGasCompensation,
-		uint256 _debtTokenGasCompensation
+		uint256 _liquidatedColl
 	);
 
 	event VesselLiquidated(
@@ -83,7 +81,6 @@ interface IVesselManagerOperations is ITrinityBase {
 	struct LiquidationValues {
 		uint256 entireVesselDebt;
 		uint256 entireVesselColl;
-		uint256 debtTokenGasCompensation;
 		uint256 debtToOffset;
 		uint256 collToSendToSP;
 		uint256 debtToRedistribute;

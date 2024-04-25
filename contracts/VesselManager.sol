@@ -237,7 +237,7 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 	) external override nonReentrant onlyVesselManagerOperations {
 		_removeStake(_asset, _borrower);
 		_closeVessel(_asset, _borrower, Status.closedByRedemption);
-		_redeemCloseVessel(_asset, _borrower, 0, _newColl);
+		_redeemCloseVessel(_asset, _borrower, _newColl);
 		emit VesselUpdated(_asset, _borrower, 0, 0, 0, VesselManagerOperation.redeemCollateral);
 	}
 
@@ -390,14 +390,13 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 	}
 
 	function updateSystemSnapshots_excludeCollRemainder(
-		address _asset,
-		uint256 _collRemainder
+		address _asset
 	) external onlyVesselManagerOperations {
 		uint256 totalStakesCached = totalStakes[_asset];
 		totalStakesSnapshot[_asset] = totalStakesCached;
 		uint256 activeColl = IActivePool(activePool).getAssetBalance(_asset);
 		uint256 liquidatedColl = IDefaultPool(defaultPool).getAssetBalance(_asset);
-		uint256 _totalCollateralSnapshot = activeColl - _collRemainder + liquidatedColl;
+		uint256 _totalCollateralSnapshot = activeColl + liquidatedColl;
 		totalCollateralSnapshot[_asset] = _totalCollateralSnapshot;
 		emit SystemSnapshotsUpdated(_asset, totalStakesCached, _totalCollateralSnapshot);
 	}
@@ -419,13 +418,8 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 	function _redeemCloseVessel(
 		address _asset,
 		address _borrower,
-		uint256 _debtTokenAmount,
 		uint256 _assetAmount
 	) internal {
-		IDebtToken(debtToken).burn(gasPoolAddress, _debtTokenAmount);
-		// Update Active Pool, and send asset to account
-		IActivePool(activePool).decreaseDebt(_asset, _debtTokenAmount);
-		// send asset from Active Pool to CollSurplus Pool
 		ICollSurplusPool(collSurplusPool).accountSurplus(_asset, _borrower, _assetAmount);
 		IActivePool(activePool).sendAsset(_asset, collSurplusPool, _assetAmount);
 	}

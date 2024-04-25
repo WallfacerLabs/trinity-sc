@@ -152,7 +152,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			A_coll_Asset.add(C_coll_Asset).add(B_coll_Asset.add(D_coll_Asset))
 		)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -283,7 +282,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 				.add(C_coll_Asset.add(F_coll_Asset))
 		)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 	////
@@ -427,7 +425,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		assert.isAtMost(th.getDifference(entireSystemColl_Asset, F_coll_Asset.add(gainedETH_Asset)), 1000)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -767,7 +764,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isTrue(txA_Asset.receipt.status)
 		assert.isFalse(await sortedVessels.contains(erc20.address, alice))
 
-		// Expect Bob now holds all Ether and TRIDebt in the system: 2 + 0.4975+0.4975*0.995+0.995 Ether and 110*3 TRI (10 each for gas compensation)
+		// Expect Bob now holds all Ether and TRIDebt in the system: 2 + 0.4975+0.4975*0.995+0.995 Ether and 110*3 TRI
 
 		const bob_Coll_Asset = (await vesselManager.Vessels(bob, erc20.address))[th.VESSEL_COLL_INDEX]
 			.add(await vesselManager.getPendingAssetReward(erc20.address, bob))
@@ -858,7 +855,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
     coll: 1.8705 ETH
     debt: 146.23 TRIDebt
     totalColl: 4.99 ETH
-    totalDebt 380 TRI (includes 50 each for gas compensation)
+    totalDebt 380 TRI
     */
 
 		const bob_Coll_Asset = (await vesselManager.Vessels(bob, erc20.address))[th.VESSEL_COLL_INDEX]
@@ -906,7 +903,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isAtMost(th.getDifference(alice_Coll_Asset, expected_A_coll_Asset), 1000)
 		assert.isAtMost(th.getDifference(alice_TRIDebt_Asset, expected_A_debt_Asset), 10000)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -1070,7 +1066,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			totalCollAfterL1_Asset.add(E_coll_Asset)
 		)
 
-		// check TRI gas compensation
 		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -1237,7 +1232,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			totalCollAfterL1_Asset.add(E_coll_Asset)
 		)
 
-		// check TRI gas compensation
 		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -1325,7 +1319,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			1000
 		)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -1397,7 +1390,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
     coll: (1 + 0.4975 + 0.5972) = 2.0947 ETH
     debt: (50 + 55 + 66.022) = 171.022 TRI Debt
     totalColl: 3.49 ETH
-    totalDebt 380 TRI (Includes 50 in each vessel for gas compensation)
+    totalDebt 380 TRI
     */
 
 		const bob_Coll_Asset = (await vesselManager.Vessels(bob, erc20.address))[th.VESSEL_COLL_INDEX]
@@ -1465,7 +1458,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			A_totalDebt_Asset.add(B_totalDebt_Asset).add(C_totalDebt_Asset).add(D_totalDebt_Asset)
 		)
 
-		// check TRI gas compensation
 		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -1629,7 +1621,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			totalCollAfterL1_Asset.add(E_coll_Asset)
 		)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -1811,7 +1802,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			totalCollAfterL1_Asset.add(E_coll_Asset)
 		)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -2059,7 +2049,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		th.assertIsApproximatelyEqual(totalStakesSnapshot_Asset, totalStakesSnapshotAfterL3_Asset)
 		th.assertIsApproximatelyEqual(totalCollateralSnapshot_Asset, totalCollateralSnapshotAfterL3_Asset)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
@@ -2318,7 +2307,6 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		th.assertIsApproximatelyEqual(totalStakesSnapshot_Asset, totalStakesSnapshotAfterL3_Asset)
 		th.assertIsApproximatelyEqual(totalCollateralSnapshot_Asset, totalCollateralSnapshotAfterL3_Asset)
 
-		// check TRI gas compensation
 		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 })

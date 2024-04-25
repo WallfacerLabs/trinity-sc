@@ -87,16 +87,14 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 			IActivePool(activePool).sendAsset(_asset, collSurplusPool, totals.totalCollSurplus);
 		}
 
-		IVesselManager(vesselManager).updateSystemSnapshots_excludeCollRemainder(_asset, 0);
+		IVesselManager(vesselManager).updateSystemSnapshots_excludeCollRemainder(_asset);
 
 		vars.liquidatedDebt = totals.totalDebtInSequence;
 		vars.liquidatedColl = totals.totalCollInSequence - totals.totalCollSurplus;
 		emit Liquidation(
 			_asset,
 			vars.liquidatedDebt,
-			vars.liquidatedColl,
-			0,
-			0
+			vars.liquidatedColl
 		);
 	}
 
@@ -138,16 +136,14 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		}
 
 		// Update system snapshots
-		IVesselManager(vesselManager).updateSystemSnapshots_excludeCollRemainder(_asset, 0);
+		IVesselManager(vesselManager).updateSystemSnapshots_excludeCollRemainder(_asset);
 
 		vars.liquidatedDebt = totals.totalDebtInSequence;
 		vars.liquidatedColl = totals.totalCollInSequence - totals.totalCollSurplus;
 		emit Liquidation(
 			_asset,
 			vars.liquidatedDebt,
-			vars.liquidatedColl,
-			0,
-			0
+			vars.liquidatedColl
 		);
 	}
 
@@ -803,7 +799,7 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 	}
 
 	/*
-	 *  Get its offset coll/debt and coll gas comp, and close the vessel.
+	 *  Get its offset coll/debt and close the vessel.
 	 */
 	function _getCappedOffsetVals(
 		address _asset,

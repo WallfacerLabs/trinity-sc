@@ -1150,7 +1150,7 @@ contract("StabilityPool - GRVT Rewards", async accounts => {
 			)
 
 			for (const defaulter of fiveDefaulters) {
-				// Defaulters 1-5 each withdraw to 9999.9 debt (including gas comp)
+				// Defaulters 1-5 each withdraw to 9999.9 debt
 				await borrowerOperations.openVessel(
 					ZERO_ADDRESS,
 					0,
@@ -1162,7 +1162,7 @@ contract("StabilityPool - GRVT Rewards", async accounts => {
 				)
 			}
 
-			// Defaulter 6 withdraws to 10k debt (inc. gas comp)
+			// Defaulter 6 withdraws to 10k debt
 			await borrowerOperations.openVessel(
 				ZERO_ADDRESS,
 				0,
@@ -1376,7 +1376,7 @@ contract("StabilityPool - GRVT Rewards", async accounts => {
 			)
 
 			for (const defaulter of fiveDefaulters) {
-				// Defaulters 1-5 each withdraw to 9999.9 debt (including gas comp)
+				// Defaulters 1-5 each withdraw to 9999.9 debt
 				await borrowerOperations.openVessel(
 					ZERO_ADDRESS,
 					0,
@@ -1388,7 +1388,7 @@ contract("StabilityPool - GRVT Rewards", async accounts => {
 				)
 			}
 
-			// Defaulter 6 withdraws to 10k debt (inc. gas comp)
+			// Defaulter 6 withdraws to 10k debt
 			await borrowerOperations.openVessel(
 				ZERO_ADDRESS,
 				0,
@@ -1608,7 +1608,7 @@ contract("StabilityPool - GRVT Rewards", async accounts => {
 			)
 
 			for (const defaulter of fiveDefaulters) {
-				// Defaulters 1-5 each withdraw to 9999.9 debt (including gas comp)
+				// Defaulters 1-5 each withdraw to 9999.9 debt
 				await borrowerOperations.openVessel(
 					ZERO_ADDRESS,
 					0,
@@ -1620,7 +1620,7 @@ contract("StabilityPool - GRVT Rewards", async accounts => {
 				)
 			}
 
-			// Defaulter 6 withdraws to 10k debt (inc. gas comp)
+			// Defaulter 6 withdraws to 10k debt
 			await borrowerOperations.openVessel(
 				ZERO_ADDRESS,
 				0,

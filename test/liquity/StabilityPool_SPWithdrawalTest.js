@@ -2820,7 +2820,7 @@ contract("StabilityPool - Withdrawal of stability deposit - Reward calculations"
 			// D should withdraw around 0.9999 VUSD, since his deposit of 9999.9 was reduced by a factor of 1e-5
 			assert.isAtMost(th.getDifference((await debtToken.balanceOf(dennis)).toString(), toBN(dec(99999, 12))), 100000)
 
-			// 99.5 ETH is offset at each L, 0.5 goes to gas comp
+			// 99.5 ETH is offset at each L
 			// Each depositor gets ETH rewards of around 99.5 ETH - 1e17 error tolerance
 			assert.isTrue(
 				toBN(alice_ETHWithdrawn)
@@ -2884,7 +2884,7 @@ contract("StabilityPool - Withdrawal of stability deposit - Reward calculations"
 				{ from: whale }
 			)
 
-			// Defaulters 1-3 each withdraw 24100, 24300, 24500 VUSD (inc gas comp)
+			// Defaulters 1-3 each withdraw 24100, 24300, 24500 VUSD
 
 			await borrowerOperations.openVessel(
 				erc20.address,

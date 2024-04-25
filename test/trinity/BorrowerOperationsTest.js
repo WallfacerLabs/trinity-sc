@@ -590,7 +590,7 @@ contract("BorrowerOperations", async accounts => {
 			}
 		})
 
-		it("withdrawColl(): doesn’t allow a user to completely withdraw all collateral from their Vessel (due to gas compensation)", async () => {
+		it("withdrawColl(): doesn’t allow a user to completely withdraw all collateral from their Vessel", async () => {
 			await openVessel({
 				asset: erc20.address,
 				ICR: toBN(dec(2, 18)),
@@ -4032,7 +4032,7 @@ contract("BorrowerOperations", async accounts => {
 			)
 		})
 
-		it("adjustVessel(): new coll = 0 and new debt = 0 is not allowed, as gas compensation still counts toward ICR", async () => {
+		it("adjustVessel(): new coll = 0 and new debt = 0 is not allowed", async () => {
 			await openVessel({
 				asset: erc20.address,
 				extraTRIAmount: toBN(dec(10000, 18)),
@@ -6767,7 +6767,7 @@ contract("BorrowerOperations", async accounts => {
 
 				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
 
-				const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
+				const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 					th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
@@ -6812,7 +6812,7 @@ contract("BorrowerOperations", async accounts => {
 
 				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
 
-				const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
+				const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 					th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 				await priceFeed.setPrice(erc20.address, dec(200, 18))

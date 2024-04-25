@@ -210,7 +210,7 @@ interface IVesselManager is ITrinityBase {
 		uint256 _collToSendToStabilityPool
 	) external;
 
-	function updateSystemSnapshots_excludeCollRemainder(address _asset, uint256 _collRemainder) external;
+	function updateSystemSnapshots_excludeCollRemainder(address _asset) external;
 
 	function movePendingVesselRewardsToActivePool(
 		address _asset,

@@ -929,30 +929,22 @@ contract("VesselManager", async accounts => {
 				// Check TCR does not decrease with each liquidation
 				const liquidationTx_1_Asset = await vesselManagerOperations.liquidate(erc20.address, defaulter_1)
 
-				const [liquidatedDebt_1_Asset, liquidatedColl_1_Asset, gasComp_1_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_1_Asset)
-
 				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_1))
 				const TCR_1_Asset = await th.getTCR(contracts.core, erc20.address)
 
-				// Expect only change to TCR to be due to the issued gas compensation	.div(entireSystemDebtBefore)
+				// Expect only change to TCR to be due to the .div(entireSystemDebtBefore)
 				const expectedTCR_1_Asset = entireSystemCollBefore_Asset
-					.sub(gasComp_1_Asset)
 					.mul(price)
 					.div(entireSystemDebtBefore_Asset)
 
 				assert.isTrue(expectedTCR_1_Asset.eq(TCR_1_Asset))
 
 				const liquidationTx_2_Asset = await vesselManagerOperations.liquidate(erc20.address, defaulter_2)
-				const [liquidatedDebt_2_Asset, liquidatedColl_2_Asset, gasComp_2_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_2_Asset)
 				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_2))
 
 				const TCR_2_Asset = await th.getTCR(contracts.core, erc20.address)
 
 				const expectedTCR_2_Asset = entireSystemCollBefore_Asset
-					.sub(gasComp_1_Asset)
-					.sub(gasComp_2_Asset)
 					.mul(price)
 					.div(entireSystemDebtBefore_Asset)
 
@@ -960,33 +952,23 @@ contract("VesselManager", async accounts => {
 
 				const liquidationTx_3_Asset = await vesselManagerOperations.liquidate(erc20.address, defaulter_3)
 
-				const [liquidatedDebt_3_Asset, liquidatedColl_3_Asset, gasComp_3_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_3_Asset)
 				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_3))
 
 				const TCR_3_Asset = await th.getTCR(contracts.core, erc20.address)
 
 				const expectedTCR_3_Asset = entireSystemCollBefore_Asset
-					.sub(gasComp_1_Asset)
-					.sub(gasComp_2_Asset)
-					.sub(gasComp_3_Asset)
 					.mul(price)
 					.div(entireSystemDebtBefore_Asset)
 
 				assert.isTrue(expectedTCR_3_Asset.eq(TCR_3_Asset))
 
 				const liquidationTx_4_Asset = await vesselManagerOperations.liquidate(erc20.address, defaulter_4)
-				const [liquidatedDebt_4_Asset, liquidatedColl_4_Asset, gasComp_4_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_4_Asset)
+
 				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_4))
 
 				const TCR_4_Asset = await th.getTCR(contracts.core, erc20.address)
 
 				const expectedTCR_4_Asset = entireSystemCollBefore_Asset
-					.sub(gasComp_1_Asset)
-					.sub(gasComp_2_Asset)
-					.sub(gasComp_3_Asset)
-					.sub(gasComp_4_Asset)
 					.mul(price)
 					.div(entireSystemDebtBefore_Asset)
 
@@ -1086,7 +1068,7 @@ contract("VesselManager", async accounts => {
 				// Carol gets liquidated
 				await priceFeed.setPrice(erc20.address, dec(100, 18))
 				const liquidationTX_C_Asset = await vesselManagerOperations.liquidate(erc20.address, carol)
-				const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
+				const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 					th.getEmittedLiquidationValues(liquidationTX_C_Asset)
 				assert.isFalse(await sortedVessels.contains(erc20.address, carol))
 
@@ -2168,7 +2150,7 @@ contract("VesselManager", async accounts => {
 				assert.isTrue(TCR_After_Asset.gte(TCR_Before_Asset))
 			})
 
-			it("liquidateVessels(): a liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
+			it("liquidateVessels(): a liquidation sequence of pure redistributions decreases the TCR, but up to 0.5%", async () => {
 				const { collateral: W_coll_Asset, totalDebt: W_debt_Asset } = await openVessel({
 					asset: erc20.address,
 					ICR: toBN(dec(100, 18)),
@@ -3318,7 +3300,7 @@ contract("VesselManager", async accounts => {
 
 				// check that Dennis' redeemed 20 debt tokens have been cancelled with debt from Bobs's Vessel (8) and Carol's Vessel (10).
 				// The remaining lot (2) is sent to Alice's Vessel, who had the best ICR.
-				// It leaves her with (3) debt tokens + 50 for gas compensation.
+				// It leaves her with (3) debt tokens.
 				th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
 				assert.equal(bob_debt_After, "0")
 				assert.equal(carol_debt_After, "0")
@@ -3420,7 +3402,7 @@ contract("VesselManager", async accounts => {
 
 				// check that Dennis' redeemed 20 debt tokens have been cancelled with debt from Bobs's Vessel (8) and Carol's Vessel (10).
 				// The remaining lot (2) is sent to Alice's Vessel, who had the best ICR.
-				// It leaves her with (3) debt tokens + 50 for gas compensation.
+				// It leaves her with (3) debt tokens.
 				th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
 				assert.equal(bob_debt_After, "0")
 				assert.equal(carol_debt_After, "0")
@@ -3521,7 +3503,7 @@ contract("VesselManager", async accounts => {
 
 				// check that Dennis' redeemed 20 debt tokens have been cancelled with debt from Bobs's Vessel (8) and Carol's Vessel (10).
 				// The remaining lot (2) is sent to Alice's Vessel, who had the best ICR.
-				// It leaves her with (3) debt tokens + 50 for gas compensation.
+				// It leaves her with (3) debt tokens.
 				th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
 				assert.equal(bob_debt_After, "0")
 				assert.equal(carol_debt_After, "0")
@@ -3633,7 +3615,7 @@ contract("VesselManager", async accounts => {
 
 				// check that Dennis' redeemed 20 debt tokens have been cancelled with debt from Bobs's Vessel (8) and Carol's Vessel (10).
 				// The remaining lot (2) is sent to Alice's Vessel, who had the best ICR.
-				// It leaves her with (3) debt tokens + 50 for gas compensation.
+				// It leaves her with (3) debt tokens.
 				th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
 
 				assert.equal(bob_debt_After, "0")
@@ -6773,7 +6755,7 @@ contract("VesselManager", async accounts => {
 				const A_Debt_Asset = await vesselManager.getVesselDebt(erc20.address, A)
 				const B_Debt_Asset = await vesselManager.getVesselDebt(erc20.address, B)
 
-				// Expect debt = requested + 0.5% fee + 50 (due to gas comp)
+				// Expect debt = requested + 0.5% fee
 
 				assert.equal(A_Debt_Asset, totalDebtA_Asset.toString())
 				assert.equal(B_Debt_Asset, totalDebtB_Asset.toString())

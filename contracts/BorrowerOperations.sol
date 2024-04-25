@@ -88,8 +88,8 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		}
 		_requireAtLeastMinNetDebt(vars.asset, vars.netDebt);
 
-		// ICR is based on the composite debt, i.e. the requested debt token amount + borrowing fee.
-		require(vars.netDebt != 0, "compositeDebt cannot be 0");
+		// ICR is based on the debt, i.e. the requested debt token amount + borrowing fee.
+		require(vars.netDebt != 0, "Debt cannot be 0");
 
 		vars.ICR = TrinityMath._computeCR(_assetAmount, vars.netDebt, vars.price);
 		vars.NICR = TrinityMath._computeNominalCR(_assetAmount, vars.netDebt);
