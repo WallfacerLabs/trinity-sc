@@ -56,7 +56,7 @@ contract("AdminContract", async accounts => {
 	const MIN_NET_DEBT_SAFETY_MIN = toBN(0)
 
 	const REDEMPTION_FEE_FLOOR_SAFETY_MAX = toBN((0.1e18).toString()) // 10%
-	const REDEMPTION_FEE_FLOOR_SAFETY_MIN = toBN((0.001e18).toString()) // 0.1%
+	const REDEMPTION_FEE_FLOOR_SAFETY_MIN = toBN('0') // 0%
 
 	before(async () => {
 		await deploy(treasury, accounts.slice(0, 5))
@@ -91,7 +91,7 @@ contract("AdminContract", async accounts => {
 		await adminContract.setMinNetDebt(ZERO_ADDRESS, dec(2_000, 18))
 		await adminContract.setMintCap(ZERO_ADDRESS, dec(1_000_000, 18))
 		await adminContract.setPercentDivisor(ZERO_ADDRESS, 200)
-		await adminContract.setRedemptionFeeFloor(ZERO_ADDRESS, (0.005e18).toString())
+		await adminContract.setRedemptionFeeFloor(ZERO_ADDRESS, '0')
 
 		assert.equal((await adminContract.getBorrowingFee(ZERO_ADDRESS)).toString(), BORROWING_FEE)
 		assert.equal((await adminContract.getCcr(ZERO_ADDRESS)).toString(), CCR)
@@ -188,7 +188,6 @@ contract("AdminContract", async accounts => {
 	})
 
 	it("setRedemptionFeeFloor: Owner change parameter - Failing SafeCheck", async () => {
-		await assertRevert(adminContract.setRedemptionFeeFloor(ZERO_ADDRESS, REDEMPTION_FEE_FLOOR_SAFETY_MIN.sub(toBN(1))))
 		await assertRevert(adminContract.setRedemptionFeeFloor(ZERO_ADDRESS, REDEMPTION_FEE_FLOOR_SAFETY_MAX.add(toBN(1))))
 	})
 

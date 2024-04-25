@@ -26,7 +26,7 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 	uint256 public constant MIN_NET_DEBT_DEFAULT = 2_000 ether;
 	uint256 public constant MINT_CAP_DEFAULT = 1_000_000 ether; // 1 million TRI
 	uint256 public constant PERCENT_DIVISOR_DEFAULT = 200; // dividing by 200 yields 0.5%
-	uint256 public constant REDEMPTION_FEE_FLOOR_DEFAULT = 0.005 ether; // 0.5%
+	uint256 public constant REDEMPTION_FEE_FLOOR_DEFAULT = 0; // 0%
 	uint256 public constant REDEMPTION_BLOCK_TIMESTAMP_DEFAULT = type(uint256).max; // never
 	bool public constant REDEMPTION_BASE_FEE_ENABLED_DEFAULT = false;
 
@@ -235,7 +235,7 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		public
 		override
 		onlyTimelock
-		safeCheck("Redemption Fee Floor", _collateral, redemptionFeeFloor, 0.001 ether, 0.1 ether) // 0.10% - 10%
+		safeCheck("Redemption Fee Floor", _collateral, redemptionFeeFloor, 0, 0.1 ether) // 0% - 10%
 	{
 		CollateralParams storage collParams = collateralParams[_collateral];
 		uint256 oldRedemptionFeeFloor = collParams.redemptionFeeFloor;
