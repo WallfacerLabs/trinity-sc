@@ -870,7 +870,9 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 		uint256 _price
 	) internal view {
 		address redeemer = msg.sender;
-		require(IAdminContract(adminContract).getRedeemerIsWhitelisted(redeemer), "VesselManagerOperations: Redeemer not whitelisted");
+		if (!IAdminContract(adminContract).getIsAddressCollateralWhitelisted(_asset, redeemer)) {
+			revert VesselManagerOperations__AddressNotCollateralWhitelisted();
+		}
 
 		uint256 redemptionBlockTimestamp = IAdminContract(adminContract).getRedemptionBlockTimestamp(_asset);
 		if (redemptionBlockTimestamp > block.timestamp) {

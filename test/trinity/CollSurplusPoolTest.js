@@ -82,6 +82,7 @@ contract("CollSurplusPool", async accounts => {
 		await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
 		// At ETH:USD = 100, this redemption should leave 1 ether of coll surplus
+		await adminContract.setAddressCollateralWhitelisted(erc20.address, A, true)
 		await th.redeemCollateralAndGetTxObject(A, contracts.core, B_netDebt, erc20.address)
 
 		const ETH_2 = await collSurplusPool.getAssetBalance(erc20.address)
