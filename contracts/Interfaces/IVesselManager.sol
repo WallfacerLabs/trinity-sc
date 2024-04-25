@@ -219,11 +219,4 @@ interface IVesselManager is ITrinityBase {
 	) external;
 
 	function isVesselActive(address _asset, address _borrower) external view returns (bool);
-
-	function sendGasCompensation(
-		address _asset,
-		address _liquidator,
-		uint256 _debtTokenAmount,
-		uint256 _assetAmount
-	) external;
 }

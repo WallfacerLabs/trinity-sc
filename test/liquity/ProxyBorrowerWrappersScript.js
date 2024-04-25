@@ -56,7 +56,6 @@
 //   let VUSD_GAS_COMPENSATION
 
 //   const getOpenVesselVUSDAmount = async (asset, totalDebt) => th.getOpenVesselVUSDAmount(contracts, totalDebt, asset)
-//   const getActualDebtFromComposite = async (compositeDebt) => th.getActualDebtFromComposite(compositeDebt, contracts)
 //   const getNetBorrowingAmount = async (asset, debtWithFee) => th.getNetBorrowingAmount(contracts, debtWithFee, asset)
 //   const openVessel = async (params) => th.openVessel(contracts, params)
 

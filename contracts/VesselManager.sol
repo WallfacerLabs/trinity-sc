@@ -414,20 +414,6 @@ contract VesselManager is IVesselManager, UUPSUpgradeable, ReentrancyGuardUpgrad
 		emit VesselUpdated(_asset, _borrower, 0, 0, 0, VesselManagerOperation.liquidateInNormalMode);
 	}
 
-	function sendGasCompensation(
-		address _asset,
-		address _liquidator,
-		uint256 _debtTokenAmount,
-		uint256 _assetAmount
-	) external nonReentrant onlyVesselManagerOperations {
-		if (_debtTokenAmount != 0) {
-			IDebtToken(debtToken).returnFromPool(gasPoolAddress, _liquidator, _debtTokenAmount);
-		}
-		if (_assetAmount != 0) {
-			IActivePool(activePool).sendAsset(_asset, _liquidator, _assetAmount);
-		}
-	}
-
 	// Internal functions ---------------------------------------------------------------------------------------------
 
 	function _redeemCloseVessel(

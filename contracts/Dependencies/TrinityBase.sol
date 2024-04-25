@@ -19,17 +19,6 @@ import "../Addresses.sol";
  * common functions.
  */
 abstract contract TrinityBase is ITrinityBase, BaseMath, OwnableUpgradeable, Addresses {
-	// --- Gas compensation functions ---
-
-	// Returns the composite debt (drawn debt + gas compensation) of a vessel, for the purpose of ICR calculation
-	function _getCompositeDebt(address _asset, uint256 _debt) internal view returns (uint256) {
-		return _debt;
-	}
-
-	function _getNetDebt(address _asset, uint256 _debt) internal view returns (uint256) {
-		return _debt;
-	}
-
 	function getEntireSystemColl(address _asset) public view returns (uint256 entireSystemColl) {
 		uint256 activeColl = IActivePool(activePool).getAssetBalance(_asset);
 		uint256 liquidatedColl = IDefaultPool(defaultPool).getAssetBalance(_asset);

@@ -6576,14 +6576,6 @@ contract("BorrowerOperations", async accounts => {
 			})
 		})
 
-		// --- getCompositeDebt ---
-
-		it("getCompositeDebt(): returns debt + gas comp", async () => {
-			assert.equal(await borrowerOperations.getCompositeDebt(erc20.address, "0"), 0)
-			th.assertIsApproximatelyEqual(await borrowerOperations.getCompositeDebt(erc20.address, dec(90, 18)),toBN(dec(90, 18)))
-			th.assertIsApproximatelyEqual(await borrowerOperations.getCompositeDebt(erc20.address, dec(24423422357345049, 12)),toBN(dec(24423422357345049, 12)))
-		})
-
 		//  --- getNewTCRFromVesselChange  - (external wrapper in Tester contract calls internal function) ---
 
 		describe("getNewTCRFromVesselChange() returns the correct TCR", async () => {

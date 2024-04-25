@@ -73,8 +73,6 @@ interface IVesselManagerOperations is ITrinityBase {
 	struct LiquidationTotals {
 		uint256 totalCollInSequence;
 		uint256 totalDebtInSequence;
-		uint256 totalCollGasCompensation;
-		uint256 totalDebtTokenGasCompensation;
 		uint256 totalDebtToOffset;
 		uint256 totalCollToSendToSP;
 		uint256 totalDebtToRedistribute;
@@ -85,7 +83,6 @@ interface IVesselManagerOperations is ITrinityBase {
 	struct LiquidationValues {
 		uint256 entireVesselDebt;
 		uint256 entireVesselColl;
-		uint256 collGasCompensation;
 		uint256 debtTokenGasCompensation;
 		uint256 debtToOffset;
 		uint256 collToSendToSP;

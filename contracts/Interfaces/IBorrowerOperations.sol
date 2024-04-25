@@ -61,8 +61,6 @@ interface IBorrowerOperations {
 
 	function claimCollateral(address _asset) external;
 
-	function getCompositeDebt(address _asset, uint256 _debt) external view returns (uint256);
-
 	function collectVesselFee(
 		address _asset,
 		address _borrower

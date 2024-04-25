@@ -316,18 +316,13 @@ class TestHelper {
 	// Virtual debt = 50 TRI.
 	static async getActualDebtFromComposite(compositeDebt, contracts, asset) {
 		if (!asset) asset = this.ZERO_ADDRESS
-		const issuedDebt = await contracts.vesselManager.getActualDebtFromComposite(
-			asset,
-			compositeDebt
-		)
-		return issuedDebt
+		return this.toBN(compositeDebt)
 	}
 
 	// Adds the gas compensation (50 TRI)
 	static async getCompositeDebt(contracts, debt, asset) {
 		if (!asset) asset = this.ZERO_ADDRESS
-		const compositeDebt = contracts.borrowerOperations.getCompositeDebt(asset, debt)
-		return compositeDebt
+		return this.toBN(debt)
 	}
 
 	static async getVesselEntireColl(contracts, vessel, asset) {
@@ -352,8 +347,7 @@ class TestHelper {
 	static async getOpenVesselTotalDebt(contracts, TRIAmount, asset) {
 		if (!asset) asset = this.ZERO_ADDRESS
 		const fee = await contracts.vesselManager.getBorrowingFee(asset, TRIAmount)
-		const compositeDebt = await this.getCompositeDebt(contracts, TRIAmount, asset)
-		return compositeDebt.add(fee)
+		return TRIAmount.add(fee)
 	}
 
 	/*
@@ -362,8 +356,7 @@ class TestHelper {
 	 */
 	static async getOpenVesselTRIAmount(contracts, totalDebt, asset) {
 		if (!asset) asset = this.ZERO_ADDRESS
-		const actualDebt = await this.getActualDebtFromComposite(totalDebt, contracts, asset)
-		const netDebt = await this.getNetBorrowingAmount(contracts, actualDebt, asset)
+		const netDebt = await this.getNetBorrowingAmount(contracts, totalDebt, asset)
 		return netDebt
 	}
 
@@ -837,7 +830,6 @@ class TestHelper {
 		} else if (typeof ICR == "string") ICR = this.toBN(ICR)
 
 		const totalDebt = await this.getOpenVesselTotalDebt(contracts, TRIAmount, asset)
-		const netDebt = await this.getActualDebtFromComposite(totalDebt, contracts, asset)
 
 		if (extraParams.value) {
 			assetSent = extraParams.value
@@ -863,7 +855,7 @@ class TestHelper {
 
 		return {
 			TRIAmount,
-			netDebt,
+			netDebt: totalDebt,
 			totalDebt,
 			ICR,
 			collateral: assetSent,
