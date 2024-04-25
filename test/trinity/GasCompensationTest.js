@@ -145,6 +145,56 @@ contract("Gas compensation tests", async accounts => {
 
 	// --- Vessel ordering by ICR tests ---
 
+	it("Vessel ordering: same collateral, decreasing debt. Price successively increases. Vessels should maintain ordering by ICR", async () => {
+		const _10_accounts = accounts.slice(1, 11)
+
+		let debt = 50
+		// create 10 vessels, constant coll, descending debt 100 to 90 TRI
+		for (const account of _10_accounts) {
+			const debtString = debt.toString().concat("000000000000000000")
+
+			await openVessel({
+				asset: erc20.address,
+				assetSent: dec(30, "ether"),
+				extraTRIAmount: debtString,
+				extraParams: { from: account },
+			})
+
+			debt -= 1
+		}
+
+		// Vary price 200-210
+		let price = 200
+		while (price < 210) {
+			const priceString = price.toString().concat("000000000000000000")
+			await priceFeed.setPrice(erc20.address, priceString)
+
+			const ICRListERC20 = []
+
+			for (account of _10_accounts) {
+				const collERC20 = (await vesselManager.Vessels(account, erc20.address))[th.VESSEL_COLL_INDEX]
+
+				const ICRERC20 = await vesselManager.getCurrentICR(erc20.address, account, price)
+				ICRListERC20.push(ICRERC20)
+
+				// Check vessel ordering by ICR is maintained
+
+				if (ICRListERC20.length > 1) {
+					const prevICRERC20 = ICRListERC20[ICRListERC20.length - 2]
+
+					try {
+						assert.isTrue(ICRERC20.gte(prevICRERC20))
+					} catch (error) {
+						console.log(`ETH price at which vessel ordering breaks: ${price}`)
+						// logICRs(ICRListERC20)
+					}
+				}
+
+				price += 1
+			}
+		}
+	})
+
 	it("Vessel ordering: increasing collateral, constant debt. Price successively increases. Vessels should maintain ordering by ICR", async () => {
 		const _20_accounts = accounts.slice(1, 21)
 
