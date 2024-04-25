@@ -49,6 +49,7 @@ interface IVesselManagerOperations is ITrinityBase {
 	error VesselManagerOperations__InvalidParam();
 	error VesselManagerOperations__NotTimelock();
 	error VesselManagerOperations__AddressNotCollateralWhitelisted();
+	error VesselManagerOperations__LiquidatorNotWhitelisted();
 
 	// Structs ----------------------------------------------------------------------------------------------------------
 

@@ -59,6 +59,11 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 	 * starting from the one with the lowest collateral ratio in the system, and moving upwards.
 	 */
 	function liquidateVessels(address _asset, uint256 _n) external override nonReentrant {
+		address liquidator = msg.sender;
+		if (!IAdminContract(adminContract).getIsLiquidatorWhitelisted(liquidator)) {
+			revert VesselManagerOperations__LiquidatorNotWhitelisted();
+		}
+
 		LocalVariables_OuterLiquidationFunction memory vars;
 		LiquidationTotals memory totals;
 		vars.price = IPriceFeed(priceFeed).fetchPrice(_asset);
@@ -102,6 +107,10 @@ contract VesselManagerOperations is IVesselManagerOperations, UUPSUpgradeable, R
 	 * Attempt to liquidate a custom list of vessels provided by the caller.
 	 */
 	function batchLiquidateVessels(address _asset, address[] memory _vesselArray) public override nonReentrant {
+		address liquidator = msg.sender;
+		if (!IAdminContract(adminContract).getIsLiquidatorWhitelisted(liquidator)) {
+			revert VesselManagerOperations__LiquidatorNotWhitelisted();
+		}
 		if (_vesselArray.length == 0 || _vesselArray.length > BATCH_SIZE_LIMIT) {
 			revert VesselManagerOperations__InvalidArraySize();
 		}

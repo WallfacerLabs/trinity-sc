@@ -48,6 +48,7 @@ const deploy = async (treasury, distributor, mintingAccounts) => {
 
 	for(const account of mintingAccounts) {
 		await adminContract.setAddressCollateralWhitelisted(erc20.address, account, true)
+		await adminContract.setLiquidatorWhitelisted(account, true)
 	}
 }
 
@@ -131,6 +132,24 @@ contract("VesselManager", async accounts => {
 		})
 
 		describe("Liquidations", async () => {
+			it("liquidate(): reverts when not whitelisted", async () => {
+				await openVessel({
+					asset: erc20.address,
+					ICR: toBN(dec(4, 18)),
+					extraParams: { from: alice },
+				})
+
+				await adminContract.setLiquidatorWhitelisted(alice, false)
+
+				try {
+					const tx = await vesselManagerOperations.liquidate(erc20.address, alice, {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
+
 			it("liquidate(): closes a Vessel that has ICR < MCR", async () => {
 				await openVessel({
 					asset: erc20.address,
@@ -1399,6 +1418,17 @@ contract("VesselManager", async accounts => {
 			})
 
 			// --- liquidateVessels() ---
+			it("liquidateVessels(): reverts when not whitelisted", async () => {
+				await adminContract.setLiquidatorWhitelisted(alice, false)
+
+				try {
+					const tx = await vesselManagerOperations.liquidateVessels(erc20.address, 2, {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
 
 			it("liquidateVessels(): liquidates a Vessel that a) was skipped in a previous liquidation and b) has pending rewards", async () => {
 				// A, B, C, D, E open vessels
@@ -2430,6 +2460,18 @@ contract("VesselManager", async accounts => {
 		// --- batchLiquidateVessels() ---
 
 		describe("Batch Liquidations", async () => {
+			it("batchLiquidateVessels(): reverts when not whitelisted", async () => {
+				await adminContract.setLiquidatorWhitelisted(alice, false)
+
+				try {
+					const tx = await vesselManagerOperations.batchLiquidateVessels(erc20.address, [], {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
+
 			it("batchLiquidateVessels(): liquidates a Vessel that a) was skipped in a previous liquidation and b) has pending rewards", async () => {
 				// A, B, C, D, E open vessels
 
