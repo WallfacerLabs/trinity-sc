@@ -21,8 +21,8 @@ var snapshotId
 var initialSnapshotId
 
 const openVessel = async params => th.openVessel(contracts.core, params)
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -43,7 +43,7 @@ const deploy = async (treasury, mintingAccounts) => {
 }
 
 contract("BorrowerOperations", async accounts => {
-	const [owner, alice, bob, carol, dennis, whale, A, B, C, D, E, multisig, treasury] = accounts
+	const [owner, alice, bob, carol, dennis, whale, A, B, C, D, E, multisig, treasury, distributor] = accounts
 
 	const getOpenVesselTRIAmount = async (totalDebt, asset) =>
 		th.getOpenVesselTRIAmount(contracts.core, totalDebt, asset)
@@ -59,7 +59,7 @@ contract("BorrowerOperations", async accounts => {
 
 	describe("BorrowerOperations Mechanisms", async () => {
 		before(async () => {
-			await deploy(treasury, [])
+			await deploy(treasury, distributor, [])
 
 			MIN_NET_DEBT_ERC20 = await adminContract.getMinNetDebt(erc20.address)
 			BORROWING_FEE_ERC20 = await adminContract.getBorrowingFee(erc20.address)
@@ -1395,12 +1395,12 @@ contract("BorrowerOperations", async accounts => {
 			assert.isTrue(baseRate_2_Asset.lt(baseRate_1_Asset))
 		}) */
 
-		it("withdrawDebtTokens(): borrowing at non-zero base rate sends fee to treasury contract", async () => {
+		it("withdrawDebtTokens(): borrowing at non-zero base rate sends fee to distributor contract", async () => {
 			// time fast-forwards 1 year
 			await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-			const Treasury_TRIBalance_Before = await debtToken.balanceOf(treasury)
-			assert.equal(Treasury_TRIBalance_Before, "0")
+			const Distributor_TRIBalance_Before = await debtToken.balanceOf(distributor)
+			assert.equal(Distributor_TRIBalance_Before, "0")
 
 			await openVessel({
 				asset: erc20.address,
@@ -1449,8 +1449,8 @@ contract("BorrowerOperations", async accounts => {
 				from: D,
 			})
 
-			const Treasury_TRIBalance_After = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_After.gt(Treasury_TRIBalance_Before))
+			const Distributor_TRIBalance_After = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_After.gt(Distributor_TRIBalance_Before))
 		})
 
 		if (!withProxy) {
@@ -1524,8 +1524,8 @@ contract("BorrowerOperations", async accounts => {
 			// time fast-forwards 1 year
 			await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-			const Treasury_TRIBalance_Before = await debtToken.balanceOf(treasury)
-			assert.equal(Treasury_TRIBalance_Before, "0")
+			const Distributor_TRIBalance_Before = await debtToken.balanceOf(distributor)
+			assert.equal(Distributor_TRIBalance_Before, "0")
 
 			await openVessel({
 				asset: erc20.address,
@@ -1576,8 +1576,8 @@ contract("BorrowerOperations", async accounts => {
 				from: D,
 			})
 
-			let Treasury_TRIBalance_After = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_After.gt(Treasury_TRIBalance_Before))
+			let Distributor_TRIBalance_After = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_After.gt(Distributor_TRIBalance_Before))
 
 			// Check D's TRI balance now equals their initial balance plus request TRI
 			let D_TRIBalanceAfter = await debtToken.balanceOf(D)
@@ -1589,8 +1589,8 @@ contract("BorrowerOperations", async accounts => {
 				from: D,
 			})
 
-			Treasury_TRIBalance_After = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_After.gt(Treasury_TRIBalance_Before))
+			Distributor_TRIBalance_After = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_After.gt(Distributor_TRIBalance_Before))
 
 			D_TRIBalanceAfter = await debtToken.balanceOf(D)
 			assert.isTrue(D_TRIBalanceAfter.eq(D_TRIBalanceBefore.add(D_TRIRequest)))
@@ -2616,12 +2616,12 @@ contract("BorrowerOperations", async accounts => {
 			assert.isTrue(baseRate_2.lt(baseRate_1))
 		}) */
 
-		it("adjustVessel(): borrowing at non-zero base rate sends TRI fee to treasury contract", async () => {
+		it("adjustVessel(): borrowing at non-zero base rate sends TRI fee to distributor contract", async () => {
 			// time fast-forwards 1 year
 			await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-			const Treasury_TRIBalance_Before = await debtToken.balanceOf(treasury)
-			assert.equal(Treasury_TRIBalance_Before, "0")
+			const Distributor_TRIBalance_Before = await debtToken.balanceOf(distributor)
+			assert.equal(Distributor_TRIBalance_Before, "0")
 
 			await openVessel({
 				asset: erc20.address,
@@ -2668,8 +2668,8 @@ contract("BorrowerOperations", async accounts => {
 				extraParams: { from: D },
 			})
 
-			const Treasury_TRIBalance_After = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_After.gt(Treasury_TRIBalance_Before))
+			const Distributor_TRIBalance_After = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_After.gt(Distributor_TRIBalance_Before))
 		})
 
 		if (!withProxy) {
@@ -2752,8 +2752,8 @@ contract("BorrowerOperations", async accounts => {
 			// time fast-forwards 1 year
 			await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-			const Treasury_TRIBalance_Before = await debtToken.balanceOf(treasury)
-			assert.equal(Treasury_TRIBalance_Before, "0")
+			const Distributor_TRIBalance_Before = await debtToken.balanceOf(distributor)
+			assert.equal(Distributor_TRIBalance_Before, "0")
 
 			await openVessel({
 				asset: erc20.address,
@@ -2804,7 +2804,7 @@ contract("BorrowerOperations", async accounts => {
 			// D adjusts vessel
 			const TRIRequest_D = toBN(dec(40, 18))
 
-			const Treasury_TRIBalance_After = await debtToken.balanceOf(treasury)
+			const Distributor_TRIBalance_After = await debtToken.balanceOf(distributor)
 
 			// Check D's TRI balance has increased by their requested TRI
 			const D_TRIBalanceAfter = await debtToken.balanceOf(D)
@@ -2813,8 +2813,8 @@ contract("BorrowerOperations", async accounts => {
 				from: D,
 			})
 
-			const Treasury_TRIBalance_After_Asset = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_After_Asset.gt(Treasury_TRIBalance_After))
+			const Distributor_TRIBalance_After_Asset = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_After_Asset.gt(Distributor_TRIBalance_After))
 
 			// Check D's TRI balance has increased by their requested TRI
 			const D_TRIBalanceAfter_Asset = await debtToken.balanceOf(D)
@@ -2822,7 +2822,7 @@ contract("BorrowerOperations", async accounts => {
 		})
 
 		// NOTE: Logic changed
-		it("adjustVessel(): borrowing at zero borrowing fee doesn't TRI balance of treasury contract", async () => {
+		it("adjustVessel(): borrowing at zero borrowing fee doesn't TRI balance of distributor contract", async () => {
 			await openVessel({
 				asset: erc20.address,
 				ICR: toBN(dec(10, 18)),
@@ -2864,17 +2864,17 @@ contract("BorrowerOperations", async accounts => {
 			await th.fastForwardTime(7200, web3.currentProvider)
 
 			// Check staking TRI balance before > 0
-			const Treasury_TRIBalance_Before = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_Before.gt(toBN("0")))
+			const Distributor_TRIBalance_Before = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_Before.gt(toBN("0")))
 
 			// D adjusts vessel
-			const Treasury_TRIBalance_After = await debtToken.balanceOf(treasury)
+			const Distributor_TRIBalance_After = await debtToken.balanceOf(distributor)
 
 			await borrowerOperations.adjustVessel(erc20.address, 0, 0, dec(37, 18), true, D, D, {
 				from: D,
 			})
-			const Treasury_TRIBalance_After_Asset = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_After_Asset.eq(Treasury_TRIBalance_After))
+			const Distributor_TRIBalance_After_Asset = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_After_Asset.eq(Distributor_TRIBalance_After))
 		})
 
 		it("adjustVessel(): borrowing at zero base rate sends total requested TRI to the user", async () => {
@@ -3409,8 +3409,8 @@ contract("BorrowerOperations", async accounts => {
 
 			assert.isTrue(await th.checkRecoveryMode(contracts.core, erc20.address))
 
-			const TreasuryTRIBalanceBefore = await debtToken.balanceOf(treasury)
-			assert.isTrue(TreasuryTRIBalanceBefore.gt(toBN("0")))
+			const DistributorTRIBalanceBefore = await debtToken.balanceOf(distributor)
+			assert.isTrue(DistributorTRIBalanceBefore.gt(toBN("0")))
 
 			const txAlice_Asset = await borrowerOperations.adjustVessel(
 				erc20.address,
@@ -3434,8 +3434,8 @@ contract("BorrowerOperations", async accounts => {
 			assert.isTrue(await th.checkRecoveryMode(contracts.core, erc20.address))
 
 			// Check no fee was sent to staking contract
-			const TreasuryTRIBalanceAfter = await debtToken.balanceOf(treasury)
-			assert.equal(TreasuryTRIBalanceAfter.toString(), TreasuryTRIBalanceBefore.toString())
+			const DistributorTRIBalanceAfter = await debtToken.balanceOf(distributor)
+			assert.equal(DistributorTRIBalanceAfter.toString(), DistributorTRIBalanceBefore.toString())
 		})
 
 		it("adjustVessel(): reverts when change would cause the TCR of the system to fall below the CCR", async () => {
@@ -5628,12 +5628,12 @@ contract("BorrowerOperations", async accounts => {
 			assert.isTrue(baseRate_2_Asset.lt(baseRate_1_Asset))
 		}) */
 
-		it("openVessel(): borrowing at non-zero base rate sends TRI fee to treasury contract", async () => {
+		it("openVessel(): borrowing at non-zero base rate sends TRI fee to distributor contract", async () => {
 			// time fast-forwards 1 year
 			await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-			const Treasury_TRIBalance_Before = await debtToken.balanceOf(treasury)
-			assert.equal(Treasury_TRIBalance_Before, "0")
+			const Distributor_TRIBalance_Before = await debtToken.balanceOf(distributor)
+			assert.equal(Distributor_TRIBalance_Before, "0")
 
 			await openVessel({
 				asset: erc20.address,
@@ -5682,8 +5682,8 @@ contract("BorrowerOperations", async accounts => {
 				extraParams: { from: D },
 			})
 
-			const Treasury_TRIBalance_After = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_After.gt(Treasury_TRIBalance_Before))
+			const Distributor_TRIBalance_After = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_After.gt(Distributor_TRIBalance_Before))
 		})
 
 		if (!withProxy) {
@@ -5760,8 +5760,8 @@ contract("BorrowerOperations", async accounts => {
 		it("openVessel(): borrowing at non-zero base rate sends requested amount to the user", async () => {
 			await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-			const Treasury_TRIBalance_Before = await debtToken.balanceOf(treasury)
-			assert.equal(Treasury_TRIBalance_Before, "0")
+			const Distributor_TRIBalance_Before = await debtToken.balanceOf(distributor)
+			assert.equal(Distributor_TRIBalance_Before, "0")
 
 			await openVessel({
 				asset: erc20.address,
@@ -5806,8 +5806,8 @@ contract("BorrowerOperations", async accounts => {
 			const TRIRequest_D = toBN(dec(40000, 18))
 			await borrowerOperations.openVessel(erc20.address, dec(500, "ether"), TRIRequest_D, D, D, { from: D })
 
-			const Treasury_TRIBalance_After = await debtToken.balanceOf(treasury)
-			assert.isTrue(Treasury_TRIBalance_After.gt(Treasury_TRIBalance_Before))
+			const Distributor_TRIBalance_After = await debtToken.balanceOf(distributor)
+			assert.isTrue(Distributor_TRIBalance_After.gt(Distributor_TRIBalance_Before))
 
 			// Check D's TRI balance now equals their requested TRI
 			const TRIBalance_D = await debtToken.balanceOf(D)

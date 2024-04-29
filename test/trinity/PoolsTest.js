@@ -6,8 +6,8 @@ var contracts
 var snapshotId
 var initialSnapshotId
 
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -28,11 +28,11 @@ const deploy = async (treasury, mintingAccounts) => {
 }
 
 contract("Pools Test", async accounts => {
-	const [token1, token2, token3, treasury] = accounts
+	const [token1, token2, token3, treasury, distributor] = accounts
 	const tokens = [token1, token2, token3]
 
 	before(async () => {
-		await deploy(treasury, accounts.slice(0, 5))
+		await deploy(treasury, distributor, accounts.slice(0, 5))
 
 		await setBalance(borrowerOperations.address, 1e18)
 		await setBalance(vesselManager.address, 1e18)

@@ -17,8 +17,8 @@ var snapshotId
 var initialSnapshotId
 var validCollateral
 
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -88,6 +88,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		H,
 		I,
 		treasury,
+		distributor,
 	] = accounts
 
 	let REDEMPTION_SOFTENING_PARAM
@@ -104,7 +105,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 	}
 
 	before(async () => {
-		await deploy(treasury, accounts.slice(0, 40))
+		await deploy(treasury, distributor, accounts.slice(0, 40))
 		await setBalance(shortTimelock.address, 1e18)
 		await impersonateAccount(shortTimelock.address)
 		await vesselManagerOperations.setRedemptionSofteningParam("9700", { from: shortTimelock.address })

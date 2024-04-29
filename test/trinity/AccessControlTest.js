@@ -9,8 +9,8 @@ var snapshotId
 var initialSnapshotId
 
 const openVessel = async params => th.openVessel(contracts.core, params)
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -31,10 +31,10 @@ const deploy = async (treasury, mintingAccounts) => {
 }
 
 contract("Access Control: functions where the caller is restricted to Trinity contract(s)", async accounts => {
-	const [alice, bob, treasury] = accounts
+	const [alice, bob, treasury, distributor] = accounts
 
 	before(async () => {
-		await deploy(treasury, accounts.slice(0, 10))
+		await deploy(treasury, distributor, accounts.slice(0, 10))
 		for (account of accounts.slice(0, 10)) {
 			await openVessel({
 				asset: erc20.address,
