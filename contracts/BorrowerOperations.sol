@@ -49,7 +49,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		uint256 price;
 		uint256 debtTokenFee;
 		uint256 netDebt;
-		uint256 compositeDebt;
 		uint256 ICR;
 		uint256 NICR;
 		uint256 stake;
@@ -89,26 +88,24 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		}
 		_requireAtLeastMinNetDebt(vars.asset, vars.netDebt);
 
-		// ICR is based on the composite debt, i.e. the requested debt token amount + borrowing fee + gas comp.
-		uint256 gasCompensation = IAdminContract(adminContract).getDebtTokenGasCompensation(vars.asset);
-		vars.compositeDebt = vars.netDebt + gasCompensation;
-		require(vars.compositeDebt != 0, "compositeDebt cannot be 0");
+		// ICR is based on the debt, i.e. the requested debt token amount + borrowing fee.
+		require(vars.netDebt != 0, "Debt cannot be 0");
 
-		vars.ICR = TrinityMath._computeCR(_assetAmount, vars.compositeDebt, vars.price);
-		vars.NICR = TrinityMath._computeNominalCR(_assetAmount, vars.compositeDebt);
+		vars.ICR = TrinityMath._computeCR(_assetAmount, vars.netDebt, vars.price);
+		vars.NICR = TrinityMath._computeNominalCR(_assetAmount, vars.netDebt);
 
 		if (isRecoveryMode) {
 			_requireICRisAboveCCR(vars.asset, vars.ICR);
 		} else {
 			_requireICRisAboveMCR(vars.asset, vars.ICR);
-			uint256 newTCR = _getNewTCRFromVesselChange(vars.asset, _assetAmount, true, vars.compositeDebt, true, vars.price); // bools: coll increase, debt increase
+			uint256 newTCR = _getNewTCRFromVesselChange(vars.asset, _assetAmount, true, vars.netDebt, true, vars.price); // bools: coll increase, debt increase
 			_requireNewTCRisAboveCCR(vars.asset, newTCR);
 		}
 
 		// Set the vessel struct's properties
 		IVesselManager(vesselManager).setVesselStatus(vars.asset, msg.sender, 1); // Vessel Status 1 = Active
 		IVesselManager(vesselManager).increaseVesselColl(vars.asset, msg.sender, _assetAmount);
-		IVesselManager(vesselManager).increaseVesselDebt(vars.asset, msg.sender, vars.compositeDebt);
+		IVesselManager(vesselManager).increaseVesselDebt(vars.asset, msg.sender, vars.netDebt);
 
 		IVesselManager(vesselManager).updateVesselRewardSnapshots(vars.asset, msg.sender);
 		vars.stake = IVesselManager(vesselManager).updateStakeAndTotalStakes(vars.asset, msg.sender);
@@ -120,15 +117,11 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		// Move the asset to the Active Pool, and mint the debtToken amount to the borrower
 		_activePoolAddColl(vars.asset, _assetAmount);
 		_withdrawDebtTokens(vars.asset, msg.sender, _debtTokenAmount, vars.netDebt);
-		// Move the debtToken gas compensation to the Gas Pool
-		if (gasCompensation != 0) {
-			_withdrawDebtTokens(vars.asset, gasPoolAddress, gasCompensation, gasCompensation);
-		}
 
 		emit VesselUpdated(
 			vars.asset,
 			msg.sender,
-			vars.compositeDebt,
+			vars.netDebt,
 			_assetAmount,
 			vars.stake,
 			BorrowerOperation.openVessel
@@ -260,7 +253,7 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 		// When the adjustment is a debt repayment, check it's a valid amount and that the caller has enough debt tokens
 		if (!_isDebtIncrease && _debtTokenChange != 0) {
-			_requireAtLeastMinNetDebt(vars.asset, _getNetDebt(vars.asset, vars.debt) - vars.netDebtChange);
+			_requireAtLeastMinNetDebt(vars.asset, vars.debt - vars.netDebtChange);
 			_requireValidDebtTokenRepayment(vars.asset, vars.debt, vars.netDebtChange);
 			_requireSufficientDebtTokenBalance(_borrower, vars.netDebtChange);
 		}
@@ -310,10 +303,7 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 		uint256 coll = IVesselManager(vesselManager).getVesselColl(_asset, msg.sender);
 		uint256 debt = IVesselManager(vesselManager).getVesselDebt(_asset, msg.sender);
 
-		uint256 gasCompensation = IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
-		uint256 netDebt = debt - gasCompensation;
-
-		_requireSufficientDebtTokenBalance(msg.sender, netDebt);
+		_requireSufficientDebtTokenBalance(msg.sender, debt);
 
 		uint256 newTCR = _getNewTCRFromVesselChange(_asset, coll, false, debt, false, price);
 		_requireNewTCRisAboveCCR(_asset, newTCR);
@@ -323,11 +313,8 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 		emit VesselUpdated(_asset, msg.sender, 0, 0, 0, BorrowerOperation.closeVessel);
 
-		// Burn the repaid debt tokens from the user's balance and the gas compensation from the Gas Pool
-		_repayDebtTokens(_asset, msg.sender, netDebt);
-		if (gasCompensation != 0) {
-			_repayDebtTokens(_asset, gasPoolAddress, gasCompensation);
-		}
+		// Burn the repaid debt tokens from the user's balance
+		_repayDebtTokens(_asset, msg.sender, debt);
 
 		// Send the collateral back to the user
 		IActivePool(activePool).sendAsset(_asset, msg.sender, coll);
@@ -586,7 +573,7 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 	function _requireValidDebtTokenRepayment(address _asset, uint256 _currentDebt, uint256 _debtRepayment) internal view {
 		require(
-			_debtRepayment <= _currentDebt - IAdminContract(adminContract).getDebtTokenGasCompensation(_asset),
+			_debtRepayment <= _currentDebt,
 			"BorrowerOps: Amount repaid must not be larger than the Vessel's debt"
 		);
 	}
@@ -678,10 +665,6 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 		uint256 newTCR = TrinityMath._computeCR(totalColl, totalDebt, _price);
 		return newTCR;
-	}
-
-	function getCompositeDebt(address _asset, uint256 _debt) external view override returns (uint256) {
-		return _getCompositeDebt(_asset, _debt);
 	}
 
 	function authorizeUpgrade(address newImplementation) public {

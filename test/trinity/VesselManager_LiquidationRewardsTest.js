@@ -124,12 +124,12 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
     Total coll = 4 + 2 * 0.995 ETH
     */
 
-		const A_collAfterL1_Asset = A_coll_Asset.add(th.applyLiquidationFee(B_coll_Asset))
+		const A_collAfterL1_Asset = A_coll_Asset.add(B_coll_Asset)
 		assert.isAtMost(
 			th.getDifference(
 				alice_Coll_Asset,
 				A_collAfterL1_Asset.add(
-					A_collAfterL1_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_collAfterL1_Asset.add(C_coll_Asset))
+					A_collAfterL1_Asset.mul(D_coll_Asset).div(A_collAfterL1_Asset.add(C_coll_Asset))
 				)
 			),
 			1000
@@ -138,7 +138,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			th.getDifference(
 				carol_Coll_Asset,
 				C_coll_Asset.add(
-					C_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_collAfterL1_Asset.add(C_coll_Asset))
+					C_coll_Asset.mul(D_coll_Asset).div(A_collAfterL1_Asset.add(C_coll_Asset))
 				)
 			),
 			1000
@@ -149,11 +149,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			.toString()
 		assert.equal(
 			entireSystemColl_Asset,
-			A_coll_Asset.add(C_coll_Asset).add(th.applyLiquidationFee(B_coll_Asset.add(D_coll_Asset)))
+			A_coll_Asset.add(C_coll_Asset).add(B_coll_Asset.add(D_coll_Asset))
 		)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: A, B, C Open. C Liquidated. D, E, F Open. F Liquidated. Distributes correct rewards", async () => {
@@ -247,23 +246,23 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
     */
 
 		const A_collAfterL1_Asset = A_coll_Asset.add(
-			A_coll_Asset.mul(th.applyLiquidationFee(C_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset))
+			A_coll_Asset.mul(C_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
 		)
 		const B_collAfterL1_Asset = B_coll_Asset.add(
-			B_coll_Asset.mul(th.applyLiquidationFee(C_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset))
+			B_coll_Asset.mul(C_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
 		)
 		const totalBeforeL2_Asset = A_collAfterL1_Asset.add(B_collAfterL1_Asset).add(D_coll_Asset).add(E_coll_Asset)
 		const expected_A_Asset = A_collAfterL1_Asset.add(
-			A_collAfterL1_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalBeforeL2_Asset)
+			A_collAfterL1_Asset.mul(F_coll_Asset).div(totalBeforeL2_Asset)
 		)
 		const expected_B_Asset = B_collAfterL1_Asset.add(
-			B_collAfterL1_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalBeforeL2_Asset)
+			B_collAfterL1_Asset.mul(F_coll_Asset).div(totalBeforeL2_Asset)
 		)
 		const expected_D_Asset = D_coll_Asset.add(
-			D_coll_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalBeforeL2_Asset)
+			D_coll_Asset.mul(F_coll_Asset).div(totalBeforeL2_Asset)
 		)
 		const expected_E_Asset = E_coll_Asset.add(
-			E_coll_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalBeforeL2_Asset)
+			E_coll_Asset.mul(F_coll_Asset).div(totalBeforeL2_Asset)
 		)
 
 		assert.isAtMost(th.getDifference(alice_Coll_Asset, expected_A_Asset), 1000)
@@ -280,11 +279,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			A_coll_Asset.add(B_coll_Asset)
 				.add(D_coll_Asset)
 				.add(E_coll_Asset)
-				.add(th.applyLiquidationFee(C_coll_Asset.add(F_coll_Asset)))
+				.add(C_coll_Asset.add(F_coll_Asset))
 		)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 	////
 
@@ -417,17 +415,8 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		assert.isAtMost(th.getDifference(freddy_rawColl_Asset, F_coll_Asset), 1000)
 
-		const gainedETH_Asset = th.applyLiquidationFee(
-			E_coll_Asset.add(
-				th.applyLiquidationFee(
-					D_coll_Asset.add(
-						th.applyLiquidationFee(
-							C_coll_Asset.add(th.applyLiquidationFee(B_coll_Asset.add(th.applyLiquidationFee(A_coll_Asset))))
-						)
-					)
-				)
-			)
-		)
+		const gainedETH_Asset = E_coll_Asset.add(D_coll_Asset.add(C_coll_Asset.add(B_coll_Asset.add(A_coll_Asset))))
+						
 		assert.isAtMost(th.getDifference(freddy_ETHReward_Asset, gainedETH_Asset), 1000)
 
 		const entireSystemColl_Asset = (await activePool.getAssetBalance(erc20.address))
@@ -436,8 +425,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		assert.isAtMost(th.getDifference(entireSystemColl_Asset, F_coll_Asset.add(gainedETH_Asset)), 1000)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(1000, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	// ---Vessel adds collateral ---
@@ -495,18 +483,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		const E_entireColl_1_Asset = (await th.getEntireCollAndDebt(contracts.core, E, erc20.address)).entireColl
 
 		const totalCollAfterL1_Asset = B_coll_Asset.add(C_coll_Asset).add(D_coll_Asset).add(E_coll_Asset)
-		const B_collAfterL1_Asset = B_coll_Asset.add(
-			th.applyLiquidationFee(A_coll_Asset).mul(B_coll_Asset).div(totalCollAfterL1_Asset)
-		)
-		const C_collAfterL1_Asset = C_coll_Asset.add(
-			th.applyLiquidationFee(A_coll_Asset).mul(C_coll_Asset).div(totalCollAfterL1_Asset)
-		)
-		const D_collAfterL1_Asset = D_coll_Asset.add(
-			th.applyLiquidationFee(A_coll_Asset).mul(D_coll_Asset).div(totalCollAfterL1_Asset)
-		)
-		const E_collAfterL1_Asset = E_coll_Asset.add(
-			th.applyLiquidationFee(A_coll_Asset).mul(E_coll_Asset).div(totalCollAfterL1_Asset)
-		)
+		const B_collAfterL1_Asset = B_coll_Asset.add(A_coll_Asset.mul(B_coll_Asset).div(totalCollAfterL1_Asset))
+		const C_collAfterL1_Asset = C_coll_Asset.add(A_coll_Asset.mul(C_coll_Asset).div(totalCollAfterL1_Asset))
+		const D_collAfterL1_Asset = D_coll_Asset.add(A_coll_Asset.mul(D_coll_Asset).div(totalCollAfterL1_Asset))
+		const E_collAfterL1_Asset = E_coll_Asset.add(A_coll_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset))
 
 		assert.isAtMost(getDifference(B_entireColl_1_Asset, B_collAfterL1_Asset), 1e8)
 		assert.isAtMost(getDifference(C_entireColl_1_Asset, C_collAfterL1_Asset), 1e8)
@@ -528,15 +508,9 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		const E_entireColl_2_Asset = (await th.getEntireCollAndDebt(contracts.core, E, erc20.address)).entireColl
 
 		const totalCollAfterL2_Asset = B_collAfterL1_Asset.add(addedColl1).add(D_collAfterL1_Asset).add(E_collAfterL1_Asset)
-		const B_collAfterL2_Asset = B_collAfterL1_Asset.add(addedColl1).add(
-			th.applyLiquidationFee(C_collAfterL1_Asset).mul(B_collAfterL1_Asset.add(addedColl1)).div(totalCollAfterL2_Asset)
-		)
-		const D_collAfterL2_Asset = D_collAfterL1_Asset.add(
-			th.applyLiquidationFee(C_collAfterL1_Asset).mul(D_collAfterL1_Asset).div(totalCollAfterL2_Asset)
-		)
-		const E_collAfterL2_Asset = E_collAfterL1_Asset.add(
-			th.applyLiquidationFee(C_collAfterL1_Asset).mul(E_collAfterL1_Asset).div(totalCollAfterL2_Asset)
-		)
+		const B_collAfterL2_Asset = B_collAfterL1_Asset.add(addedColl1).add(C_collAfterL1_Asset.mul(B_collAfterL1_Asset.add(addedColl1)).div(totalCollAfterL2_Asset))
+		const D_collAfterL2_Asset = D_collAfterL1_Asset.add(C_collAfterL1_Asset.mul(D_collAfterL1_Asset).div(totalCollAfterL2_Asset))
+		const E_collAfterL2_Asset = E_collAfterL1_Asset.add(C_collAfterL1_Asset.mul(E_collAfterL1_Asset).div(totalCollAfterL2_Asset))
 
 		// console.log(`D_entireColl_2: ${D_entireColl_2}`)
 		// console.log(`E_entireColl_2: ${E_entireColl_2}`)
@@ -556,12 +530,8 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isFalse(await sortedVessels.contains(erc20.address, E))
 
 		const totalCollAfterL3_Asset = B_collAfterL2_Asset.add(addedColl2).add(D_collAfterL2_Asset)
-		const B_collAfterL3_Asset = B_collAfterL2_Asset.add(addedColl2).add(
-			th.applyLiquidationFee(E_collAfterL2_Asset).mul(B_collAfterL2_Asset.add(addedColl2)).div(totalCollAfterL3_Asset)
-		)
-		const D_collAfterL3_Asset = D_collAfterL2_Asset.add(
-			th.applyLiquidationFee(E_collAfterL2_Asset).mul(D_collAfterL2_Asset).div(totalCollAfterL3_Asset)
-		)
+		const B_collAfterL3_Asset = B_collAfterL2_Asset.add(addedColl2).add(E_collAfterL2_Asset.mul(B_collAfterL2_Asset.add(addedColl2)).div(totalCollAfterL3_Asset))
+		const D_collAfterL3_Asset = D_collAfterL2_Asset.add(E_collAfterL2_Asset.mul(D_collAfterL2_Asset).div(totalCollAfterL3_Asset))
 
 		const B_entireColl_3_Asset = (await th.getEntireCollAndDebt(contracts.core, B, erc20.address)).entireColl
 		const D_entireColl_3_Asset = (await th.getEntireCollAndDebt(contracts.core, D, erc20.address)).entireColl
@@ -629,7 +599,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isTrue(txA_Asset.receipt.status)
 		assert.isFalse(await sortedVessels.contains(erc20.address, A))
 
-		const A_collRedistribution_Asset = A_entireColl_0_Asset.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+		const A_collRedistribution_Asset = A_entireColl_0_Asset
 
 		// console.log(`A_collRedistribution: ${A_collRedistribution}`)
 		// Check accumulated ETH gain for each vessel
@@ -674,7 +644,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isTrue(txC_Asset.receipt.status)
 		assert.isFalse(await sortedVessels.contains(erc20.address, C))
 
-		const C_collRedistribution_Asset = C_entireColl_1_Asset.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+		const C_collRedistribution_Asset = C_entireColl_1_Asset
 		// console.log(`C_collRedistribution: ${C_collRedistribution}`)
 
 		const B_ETHGain_2_Asset = await vesselManager.getPendingAssetReward(erc20.address, B)
@@ -718,7 +688,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isTrue(txE_Asset.receipt.status)
 		assert.isFalse(await sortedVessels.contains(erc20.address, E))
 
-		const E_collRedistribution_Asset = E_entireColl_2_Asset.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+		const E_collRedistribution_Asset = E_entireColl_2_Asset
 		// console.log(`E_collRedistribution: ${E_collRedistribution}`)
 
 		const B_ETHGain_3_Asset = await vesselManager.getPendingAssetReward(erc20.address, B)
@@ -794,7 +764,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isTrue(txA_Asset.receipt.status)
 		assert.isFalse(await sortedVessels.contains(erc20.address, alice))
 
-		// Expect Bob now holds all Ether and TRIDebt in the system: 2 + 0.4975+0.4975*0.995+0.995 Ether and 110*3 TRI (10 each for gas compensation)
+		// Expect Bob now holds all Ether and TRIDebt in the system: 2 + 0.4975+0.4975*0.995+0.995 Ether and 110*3 TRI
 
 		const bob_Coll_Asset = (await vesselManager.Vessels(bob, erc20.address))[th.VESSEL_COLL_INDEX]
 			.add(await vesselManager.getPendingAssetReward(erc20.address, bob))
@@ -805,13 +775,9 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			.toString()
 
 		const expected_B_coll_Asset = B_coll_Asset.add(addedColl)
-			.add(th.applyLiquidationFee(A_coll_Asset))
-			.add(th.applyLiquidationFee(C_coll_Asset).mul(B_coll_Asset).div(A_coll_Asset.add(B_coll_Asset)))
-			.add(
-				th.applyLiquidationFee(
-					th.applyLiquidationFee(C_coll_Asset).mul(A_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
-				)
-			)
+			.add(A_coll_Asset)
+			.add(C_coll_Asset.mul(B_coll_Asset).div(A_coll_Asset.add(B_coll_Asset)))
+			.add(C_coll_Asset.mul(A_coll_Asset).div(A_coll_Asset.add(B_coll_Asset)))
 
 		assert.isAtMost(th.getDifference(bob_Coll_Asset, expected_B_coll_Asset), 1000)
 		assert.isAtMost(
@@ -889,7 +855,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
     coll: 1.8705 ETH
     debt: 146.23 TRIDebt
     totalColl: 4.99 ETH
-    totalDebt 380 TRI (includes 50 each for gas compensation)
+    totalDebt 380 TRI
     */
 
 		const bob_Coll_Asset = (await vesselManager.Vessels(bob, erc20.address))[th.VESSEL_COLL_INDEX]
@@ -910,12 +876,12 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		const totalCollAfterL1_Asset = A_coll_Asset.add(B_coll_Asset)
 			.add(addedColl)
-			.add(th.applyLiquidationFee(C_coll_Asset))
+			.add(C_coll_Asset)
 		const B_collAfterL1_Asset = B_coll_Asset.add(
-			B_coll_Asset.mul(th.applyLiquidationFee(C_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset))
+			B_coll_Asset.mul(C_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
 		).add(addedColl)
 		const expected_B_coll_Asset = B_collAfterL1_Asset.add(
-			B_collAfterL1_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(totalCollAfterL1_Asset)
+			B_collAfterL1_Asset.mul(D_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const expected_B_debt_Asset = B_totalDebt_Asset.add(
 			B_coll_Asset.mul(C_totalDebt_Asset).div(A_coll_Asset.add(B_coll_Asset))
@@ -925,10 +891,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isAtMost(th.getDifference(bob_TRIDebt_Asset, expected_B_debt_Asset), 10000)
 
 		const A_collAfterL1_Asset = A_coll_Asset.add(
-			A_coll_Asset.mul(th.applyLiquidationFee(C_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset))
+			A_coll_Asset.mul(C_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
 		)
 		const expected_A_coll_Asset = A_collAfterL1_Asset.add(
-			A_collAfterL1_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(totalCollAfterL1_Asset)
+			A_collAfterL1_Asset.mul(D_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const expected_A_debt_Asset = A_totalDebt_Asset.add(
 			A_coll_Asset.mul(C_totalDebt_Asset).div(A_coll_Asset.add(B_coll_Asset))
@@ -937,8 +903,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isAtMost(th.getDifference(alice_Coll_Asset, expected_A_coll_Asset), 1000)
 		assert.isAtMost(th.getDifference(alice_TRIDebt_Asset, expected_A_debt_Asset), 10000)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: Vessel with the majority stake tops up. A,B,C, D open. Liq(D). C tops up. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -995,22 +960,22 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		assert.equal(
 			entireSystemColl_1_Asset,
-			A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset).add(th.applyLiquidationFee(D_coll_Asset))
+			A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset).add(D_coll_Asset)
 		)
 
 		const totalColl_Asset = A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset)
 
 		th.assertIsApproximatelyEqual(
 			alice_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(A_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(A_coll_Asset).div(totalColl_Asset)
 		)
 		th.assertIsApproximatelyEqual(
 			bob_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(B_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(B_coll_Asset).div(totalColl_Asset)
 		)
 		th.assertIsApproximatelyEqual(
 			carol_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(C_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(C_coll_Asset).div(totalColl_Asset)
 		)
 
 		//Carol adds 1 ETH to her vessel, brings it to 1992.01 total coll
@@ -1066,25 +1031,25 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		const totalCollAfterL1_Asset = A_coll_Asset.add(B_coll_Asset)
 			.add(C_coll_Asset)
-			.add(th.applyLiquidationFee(D_coll_Asset))
+			.add(D_coll_Asset)
 			.add(C_addedColl)
 		const A_collAfterL1_Asset = A_coll_Asset.add(
-			A_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			A_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		)
 		const expected_A_coll_Asset = A_collAfterL1_Asset.add(
-			A_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			A_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const B_collAfterL1_Asset = B_coll_Asset.add(
-			B_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			B_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		)
 		const expected_B_coll_Asset = B_collAfterL1_Asset.add(
-			B_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			B_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const C_collAfterL1_Asset = C_coll_Asset.add(
-			C_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			C_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		).add(C_addedColl)
 		const expected_C_coll_Asset = C_collAfterL1_Asset.add(
-			C_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			C_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 
 		assert.isAtMost(th.getDifference(alice_Coll_Asset, expected_A_coll_Asset), 1000)
@@ -1098,11 +1063,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		th.assertIsApproximatelyEqual(
 			entireSystemColl_3_Asset,
-			totalCollAfterL1_Asset.add(th.applyLiquidationFee(E_coll_Asset))
+			totalCollAfterL1_Asset.add(E_coll_Asset)
 		)
 
-		// check TRI gas compensation
-		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: Vessel with the majority stake tops up. A,B,C, D open. Liq(D). A, B, C top up. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1159,22 +1123,22 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		assert.equal(
 			entireSystemColl_1_Asset,
-			A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset).add(th.applyLiquidationFee(D_coll_Asset))
+			A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset).add(D_coll_Asset)
 		)
 
 		const totalColl_Asset = A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset)
 
 		th.assertIsApproximatelyEqual(
 			alice_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(A_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(A_coll_Asset).div(totalColl_Asset)
 		)
 		th.assertIsApproximatelyEqual(
 			bob_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(B_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(B_coll_Asset).div(totalColl_Asset)
 		)
 		th.assertIsApproximatelyEqual(
 			carol_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(C_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(C_coll_Asset).div(totalColl_Asset)
 		)
 
 		/* Alice, Bob, Carol each adds 1 ETH to their vessels,
@@ -1233,25 +1197,25 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		const totalCollAfterL1_Asset = A_coll_Asset.add(B_coll_Asset)
 			.add(C_coll_Asset)
-			.add(th.applyLiquidationFee(D_coll_Asset))
+			.add(D_coll_Asset)
 			.add(addedColl.mul(toBN(3)))
 		const A_collAfterL1_Asset = A_coll_Asset.add(
-			A_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			A_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		).add(addedColl)
 		const expected_A_coll_Asset = A_collAfterL1_Asset.add(
-			A_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			A_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const B_collAfterL1_Asset = B_coll_Asset.add(
-			B_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			B_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		).add(addedColl)
 		const expected_B_coll_Asset = B_collAfterL1_Asset.add(
-			B_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			B_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const C_collAfterL1_Asset = C_coll_Asset.add(
-			C_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			C_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		).add(addedColl)
 		const expected_C_coll_Asset = C_collAfterL1_Asset.add(
-			C_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			C_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 
 		assert.isAtMost(th.getDifference(alice_Coll_Asset, expected_A_coll_Asset), 1000)
@@ -1265,11 +1229,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		th.assertIsApproximatelyEqual(
 			entireSystemColl_3_Asset,
-			totalCollAfterL1_Asset.add(th.applyLiquidationFee(E_coll_Asset))
+			totalCollAfterL1_Asset.add(E_coll_Asset)
 		)
 
-		// check TRI gas compensation
-		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	// --- Vessel withdraws collateral ---
@@ -1343,13 +1306,9 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			.toString()
 
 		const expected_B_coll_Asset = B_coll_Asset.sub(withdrawnColl)
-			.add(th.applyLiquidationFee(A_coll_Asset))
-			.add(th.applyLiquidationFee(C_coll_Asset).mul(B_coll_Asset).div(A_coll_Asset.add(B_coll_Asset)))
-			.add(
-				th.applyLiquidationFee(
-					th.applyLiquidationFee(C_coll_Asset).mul(A_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
-				)
-			)
+			.add(A_coll_Asset)
+			.add(C_coll_Asset.mul(B_coll_Asset).div(A_coll_Asset.add(B_coll_Asset)))
+			.add(C_coll_Asset.mul(A_coll_Asset).div(A_coll_Asset.add(B_coll_Asset)))
 
 		assert.isAtMost(th.getDifference(bob_Coll_Asset, expected_B_coll_Asset), 1000)
 		assert.isAtMost(
@@ -1360,8 +1319,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			1000
 		)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: A,B,C Open. Liq(C). B withdraws coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
@@ -1432,7 +1390,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
     coll: (1 + 0.4975 + 0.5972) = 2.0947 ETH
     debt: (50 + 55 + 66.022) = 171.022 TRI Debt
     totalColl: 3.49 ETH
-    totalDebt 380 TRI (Includes 50 in each vessel for gas compensation)
+    totalDebt 380 TRI
     */
 
 		const bob_Coll_Asset = (await vesselManager.Vessels(bob, erc20.address))[th.VESSEL_COLL_INDEX]
@@ -1453,12 +1411,12 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		const totalCollAfterL1_Asset = A_coll_Asset.add(B_coll_Asset)
 			.sub(withdrawnColl)
-			.add(th.applyLiquidationFee(C_coll_Asset))
+			.add(C_coll_Asset)
 		const B_collAfterL1_Asset = B_coll_Asset.add(
-			B_coll_Asset.mul(th.applyLiquidationFee(C_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset))
+			B_coll_Asset.mul(C_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
 		).sub(withdrawnColl)
 		const expected_B_coll_Asset = B_collAfterL1_Asset.add(
-			B_collAfterL1_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(totalCollAfterL1_Asset)
+			B_collAfterL1_Asset.mul(D_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const expected_B_debt_Asset = B_totalDebt_Asset.add(
 			B_coll_Asset.mul(C_totalDebt_Asset).div(A_coll_Asset.add(B_coll_Asset))
@@ -1468,10 +1426,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		assert.isAtMost(th.getDifference(bob_TRIDebt_Asset, expected_B_debt_Asset), 10000)
 
 		const A_collAfterL1_Asset = A_coll_Asset.add(
-			A_coll_Asset.mul(th.applyLiquidationFee(C_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset))
+			A_coll_Asset.mul(C_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
 		)
 		const expected_A_coll_Asset = A_collAfterL1_Asset.add(
-			A_collAfterL1_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(totalCollAfterL1_Asset)
+			A_collAfterL1_Asset.mul(D_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const expected_A_debt_Asset = A_totalDebt_Asset.add(
 			A_coll_Asset.mul(C_totalDebt_Asset).div(A_coll_Asset.add(B_coll_Asset))
@@ -1487,9 +1445,9 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		th.assertIsApproximatelyEqual(
 			entireSystemColl_Asset,
 			A_coll_Asset.add(B_coll_Asset)
-				.add(th.applyLiquidationFee(C_coll_Asset))
+				.add(C_coll_Asset)
 				.sub(withdrawnColl)
-				.add(th.applyLiquidationFee(D_coll_Asset))
+				.add(D_coll_Asset)
 		)
 
 		const entireSystemDebt_Asset = (await activePool.getDebtTokenBalance(erc20.address)).add(
@@ -1500,8 +1458,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			A_totalDebt_Asset.add(B_totalDebt_Asset).add(C_totalDebt_Asset).add(D_totalDebt_Asset)
 		)
 
-		// check TRI gas compensation
-		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		th.assertIsApproximatelyEqual((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: Vessel with the majority stake withdraws. A,B,C,D open. Liq(D). C withdraws some coll. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1558,22 +1515,22 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		th.assertIsApproximatelyEqual(
 			entireSystemColl_1_Asset,
-			A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset).add(th.applyLiquidationFee(D_coll_Asset))
+			A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset).add(D_coll_Asset)
 		)
 
 		const totalColl_Asset = A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset)
 
 		th.assertIsApproximatelyEqual(
 			alice_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(A_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(A_coll_Asset).div(totalColl_Asset)
 		)
 		th.assertIsApproximatelyEqual(
 			bob_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(B_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(B_coll_Asset).div(totalColl_Asset)
 		)
 		th.assertIsApproximatelyEqual(
 			carol_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(C_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(C_coll_Asset).div(totalColl_Asset)
 		)
 
 		//Carol wthdraws 1 ETH from her vessel, brings it to 1990.01 total coll
@@ -1629,25 +1586,25 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		const totalCollAfterL1_Asset = A_coll_Asset.add(B_coll_Asset)
 			.add(C_coll_Asset)
-			.add(th.applyLiquidationFee(D_coll_Asset))
+			.add(D_coll_Asset)
 			.sub(C_withdrawnColl)
 		const A_collAfterL1_Asset = A_coll_Asset.add(
-			A_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			A_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		)
 		const expected_A_coll_Asset = A_collAfterL1_Asset.add(
-			A_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			A_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const B_collAfterL1_Asset = B_coll_Asset.add(
-			B_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			B_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		)
 		const expected_B_coll_Asset = B_collAfterL1_Asset.add(
-			B_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			B_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const C_collAfterL1_Asset = C_coll_Asset.add(
-			C_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			C_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		).sub(C_withdrawnColl)
 		const expected_C_coll_Asset = C_collAfterL1_Asset.add(
-			C_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			C_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 
 		assert.isAtMost(th.getDifference(alice_Coll_Asset, expected_A_coll_Asset), 1000)
@@ -1661,11 +1618,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		th.assertIsApproximatelyEqual(
 			entireSystemColl_3_Asset,
-			totalCollAfterL1_Asset.add(th.applyLiquidationFee(E_coll_Asset))
+			totalCollAfterL1_Asset.add(E_coll_Asset)
 		)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	it("redistribution: Vessel with the majority stake withdraws. A,B,C,D open. Liq(D). A, B, C withdraw. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1722,22 +1678,22 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		th.assertIsApproximatelyEqual(
 			entireSystemColl_1_Asset,
-			A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset).add(th.applyLiquidationFee(D_coll_Asset))
+			A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset).add(D_coll_Asset)
 		)
 
 		const totalColl_Asset = A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset)
 
 		th.assertIsApproximatelyEqual(
 			alice_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(A_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(A_coll_Asset).div(totalColl_Asset)
 		)
 		th.assertIsApproximatelyEqual(
 			bob_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(B_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(B_coll_Asset).div(totalColl_Asset)
 		)
 		th.assertIsApproximatelyEqual(
 			carol_ETHReward_1_Asset.toString(),
-			th.applyLiquidationFee(D_coll_Asset).mul(C_coll_Asset).div(totalColl_Asset)
+			D_coll_Asset.mul(C_coll_Asset).div(totalColl_Asset)
 		)
 
 		/* Alice, Bob, Carol each withdraw 0.5 ETH to their vessels,
@@ -1811,25 +1767,25 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		const totalCollAfterL1_Asset = A_coll_Asset.add(B_coll_Asset)
 			.add(C_coll_Asset)
-			.add(th.applyLiquidationFee(D_coll_Asset))
+			.add(D_coll_Asset)
 			.sub(withdrawnColl.mul(toBN(3)))
 		const A_collAfterL1_Asset = A_coll_Asset.add(
-			A_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			A_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		).sub(withdrawnColl)
 		const expected_A_coll_Asset = A_collAfterL1_Asset.add(
-			A_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			A_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const B_collAfterL1_Asset = B_coll_Asset.add(
-			B_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			B_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		).sub(withdrawnColl)
 		const expected_B_coll_Asset = B_collAfterL1_Asset.add(
-			B_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			B_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 		const C_collAfterL1_Asset = C_coll_Asset.add(
-			C_coll_Asset.mul(th.applyLiquidationFee(D_coll_Asset)).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
+			C_coll_Asset.mul(D_coll_Asset).div(A_coll_Asset.add(B_coll_Asset).add(C_coll_Asset))
 		).sub(withdrawnColl)
 		const expected_C_coll_Asset = C_collAfterL1_Asset.add(
-			C_collAfterL1_Asset.mul(th.applyLiquidationFee(E_coll_Asset)).div(totalCollAfterL1_Asset)
+			C_collAfterL1_Asset.mul(E_coll_Asset).div(totalCollAfterL1_Asset)
 		)
 
 		assert.isAtMost(th.getDifference(alice_Coll_2_Asset, expected_A_coll_Asset), 1000)
@@ -1843,11 +1799,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		th.assertIsApproximatelyEqual(
 			entireSystemColl_3_Asset,
-			totalCollAfterL1_Asset.add(th.applyLiquidationFee(E_coll_Asset))
+			totalCollAfterL1_Asset.add(E_coll_Asset)
 		)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(400, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	// For calculations of correct values used in test, see scenario 1:
@@ -1885,12 +1840,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		// Check rewards for B and C
 
-		const B_pendingRewardsAfterL1_Asset = th
-			.applyLiquidationFee(A_coll_Asset)
+		const B_pendingRewardsAfterL1_Asset = A_coll_Asset
 			.mul(B_coll_Asset)
 			.div(B_coll_Asset.add(C_coll_Asset))
-		const C_pendingRewardsAfterL1_Asset = th
-			.applyLiquidationFee(A_coll_Asset)
+		const C_pendingRewardsAfterL1_Asset = A_coll_Asset
 			.mul(C_coll_Asset)
 			.div(B_coll_Asset.add(C_coll_Asset))
 
@@ -1904,9 +1857,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		const totalStakesSnapshotAfterL1_Asset = B_coll_Asset.add(C_coll_Asset)
-		const totalCollateralSnapshotAfterL1_Asset = totalStakesSnapshotAfterL1_Asset.add(
-			th.applyLiquidationFee(A_coll_Asset)
-		)
+		const totalCollateralSnapshotAfterL1_Asset = totalStakesSnapshotAfterL1_Asset.add(A_coll_Asset)
 		th.assertIsApproximatelyEqual(
 			await vesselManager.totalStakesSnapshot(erc20.address),
 			totalStakesSnapshotAfterL1_Asset
@@ -1952,10 +1903,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		// Check rewards for C and D
 
-		const C_pendingRewardsAfterL2_Asset = C_collAfterL1_Asset.mul(th.applyLiquidationFee(B_collAfterL1_Asset)).div(
+		const C_pendingRewardsAfterL2_Asset = C_collAfterL1_Asset.mul(B_collAfterL1_Asset).div(
 			C_collAfterL1_Asset.add(D_coll_Asset)
 		)
-		const D_pendingRewardsAfterL2_Asset = D_coll_Asset.mul(th.applyLiquidationFee(B_collAfterL1_Asset)).div(
+		const D_pendingRewardsAfterL2_Asset = D_coll_Asset.mul(B_collAfterL1_Asset).div(
 			C_collAfterL1_Asset.add(D_coll_Asset)
 		)
 
@@ -1972,8 +1923,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			.add(D_coll_Asset.mul(totalStakesSnapshotAfterL1_Asset).div(totalCollateralSnapshotAfterL1_Asset))
 			.sub(B_coll_Asset)
 			.sub(C_withdrawnColl.mul(totalStakesSnapshotAfterL1_Asset).div(totalCollateralSnapshotAfterL1_Asset))
-		const defaultedAmountAfterL2_Asset = th
-			.applyLiquidationFee(B_coll_Asset.add(B_addedColl).add(B_pendingRewardsAfterL1_Asset))
+		const defaultedAmountAfterL2_Asset = B_coll_Asset.add(B_addedColl).add(B_pendingRewardsAfterL1_Asset)
 			.add(C_pendingRewardsAfterL1_Asset)
 		const totalCollateralSnapshotAfterL2_Asset = C_coll_Asset.sub(C_withdrawnColl)
 			.add(D_coll_Asset)
@@ -2038,13 +1988,13 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		const D_collAfterL2_Asset = D_coll_Asset.add(D_pendingRewardsAfterL2_Asset).add(D_addedColl)
 		const totalCollForL3_Asset = C_collAfterL2_Asset.add(D_collAfterL2_Asset).add(E_coll_Asset)
 		const C_collAfterL3_Asset = C_collAfterL2_Asset.add(
-			C_collAfterL2_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalCollForL3_Asset)
+			C_collAfterL2_Asset.mul(F_coll_Asset).div(totalCollForL3_Asset)
 		)
 		const D_collAfterL3_Asset = D_collAfterL2_Asset.add(
-			D_collAfterL2_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalCollForL3_Asset)
+			D_collAfterL2_Asset.mul(F_coll_Asset).div(totalCollForL3_Asset)
 		)
 		const E_collAfterL3_Asset = E_coll_Asset.add(
-			E_coll_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalCollForL3_Asset)
+			E_coll_Asset.mul(F_coll_Asset).div(totalCollForL3_Asset)
 		)
 
 		assert.isAtMost(th.getDifference(carol_rawColl_Asset, C_collAfterL1_Asset), 1000)
@@ -2092,15 +2042,14 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			.add(D_addedColl)
 			.add(E_coll_Asset)
 			.add(defaultedAmountAfterL2_Asset)
-			.add(th.applyLiquidationFee(F_coll_Asset))
+			.add(F_coll_Asset)
 		const totalStakesSnapshot_Asset = (await vesselManager.totalStakesSnapshot(erc20.address)).toString()
 		const totalCollateralSnapshot_Asset = (await vesselManager.totalCollateralSnapshot(erc20.address)).toString()
 
 		th.assertIsApproximatelyEqual(totalStakesSnapshot_Asset, totalStakesSnapshotAfterL3_Asset)
 		th.assertIsApproximatelyEqual(totalCollateralSnapshot_Asset, totalCollateralSnapshotAfterL3_Asset)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(600, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 
 	// For calculations of correct values used in test, see scenario 2:
@@ -2142,12 +2091,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		// Check rewards for B and C
 
-		const B_pendingRewardsAfterL1_Asset = th
-			.applyLiquidationFee(A_coll_Asset)
+		const B_pendingRewardsAfterL1_Asset = A_coll_Asset
 			.mul(B_coll_Asset)
 			.div(B_coll_Asset.add(C_coll_Asset))
-		const C_pendingRewardsAfterL1_Asset = th
-			.applyLiquidationFee(A_coll_Asset)
+		const C_pendingRewardsAfterL1_Asset = A_coll_Asset
 			.mul(C_coll_Asset)
 			.div(B_coll_Asset.add(C_coll_Asset))
 
@@ -2161,9 +2108,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 		)
 
 		const totalStakesSnapshotAfterL1_Asset = B_coll_Asset.add(C_coll_Asset)
-		const totalCollateralSnapshotAfterL1_Asset = totalStakesSnapshotAfterL1_Asset.add(
-			th.applyLiquidationFee(A_coll_Asset)
-		)
+		const totalCollateralSnapshotAfterL1_Asset = totalStakesSnapshotAfterL1_Asset.add(A_coll_Asset)
 
 		th.assertIsApproximatelyEqual(
 			await vesselManager.totalStakesSnapshot(erc20.address),
@@ -2210,10 +2155,10 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		// Check rewards for C and D
 
-		const C_pendingRewardsAfterL2_Asset = C_collAfterL1_Asset.mul(th.applyLiquidationFee(B_collAfterL1_Asset)).div(
+		const C_pendingRewardsAfterL2_Asset = C_collAfterL1_Asset.mul(B_collAfterL1_Asset).div(
 			C_collAfterL1_Asset.add(D_coll_Asset)
 		)
-		const D_pendingRewardsAfterL2_Asset = D_coll_Asset.mul(th.applyLiquidationFee(B_collAfterL1_Asset)).div(
+		const D_pendingRewardsAfterL2_Asset = D_coll_Asset.mul(B_collAfterL1_Asset).div(
 			C_collAfterL1_Asset.add(D_coll_Asset)
 		)
 		const C_collAfterL2_Asset = C_collAfterL1_Asset.add(C_pendingRewardsAfterL2_Asset)
@@ -2231,8 +2176,7 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			.add(D_coll_Asset.mul(totalStakesSnapshotAfterL1_Asset).div(totalCollateralSnapshotAfterL1_Asset))
 			.sub(B_coll_Asset)
 			.sub(C_withdrawnColl.mul(totalStakesSnapshotAfterL1_Asset).div(totalCollateralSnapshotAfterL1_Asset))
-		const defaultedAmountAfterL2_Asset = th
-			.applyLiquidationFee(B_coll_Asset.add(B_addedColl).add(B_pendingRewardsAfterL1_Asset))
+		const defaultedAmountAfterL2_Asset = B_coll_Asset.add(B_addedColl).add(B_pendingRewardsAfterL1_Asset)
 			.add(C_pendingRewardsAfterL1_Asset)
 		const totalCollateralSnapshotAfterL2_Asset = C_coll_Asset.sub(C_withdrawnColl)
 			.add(D_coll_Asset)
@@ -2302,13 +2246,13 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 
 		const totalCollForL3_Asset = C_collAfterL2_Asset.add(D_collAfterL2_Asset).add(E_coll_Asset)
 		const C_collAfterL3_Asset = C_collAfterL2_Asset.add(
-			C_collAfterL2_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalCollForL3_Asset)
+			C_collAfterL2_Asset.mul(F_coll_Asset).div(totalCollForL3_Asset)
 		)
 		const D_collAfterL3_Asset = D_collAfterL2_Asset.add(
-			D_collAfterL2_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalCollForL3_Asset)
+			D_collAfterL2_Asset.mul(F_coll_Asset).div(totalCollForL3_Asset)
 		)
 		const E_collAfterL3_Asset = E_coll_Asset.add(
-			E_coll_Asset.mul(th.applyLiquidationFee(F_coll_Asset)).div(totalCollForL3_Asset)
+			E_coll_Asset.mul(F_coll_Asset).div(totalCollForL3_Asset)
 		)
 
 		assert.isAtMost(th.getDifference(carol_rawColl_Asset, C_collAfterL1_Asset), 1000)
@@ -2356,15 +2300,14 @@ contract("VesselManager - Redistribution reward calculations", async accounts =>
 			.add(D_addedColl)
 			.add(E_coll_Asset)
 			.add(defaultedAmountAfterL2_Asset)
-			.add(th.applyLiquidationFee(F_coll_Asset))
+			.add(F_coll_Asset)
 		const totalStakesSnapshot_Asset = (await vesselManager.totalStakesSnapshot(erc20.address)).toString()
 		const totalCollateralSnapshot_Asset = (await vesselManager.totalCollateralSnapshot(erc20.address)).toString()
 
 		th.assertIsApproximatelyEqual(totalStakesSnapshot_Asset, totalStakesSnapshotAfterL3_Asset)
 		th.assertIsApproximatelyEqual(totalCollateralSnapshot_Asset, totalCollateralSnapshotAfterL3_Asset)
 
-		// check TRI gas compensation
-		assert.equal((await debtToken.balanceOf(owner)).toString(), toBN(dec(600, 18)).toString())
+		assert.equal((await debtToken.balanceOf(owner)).toString(), 0)
 	})
 })
 

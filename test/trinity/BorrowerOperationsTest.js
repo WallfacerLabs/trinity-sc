@@ -53,7 +53,6 @@ contract("BorrowerOperations", async accounts => {
 	const getVesselEntireDebt = async (vessel, asset) => th.getVesselEntireDebt(contracts.core, vessel, asset)
 	const getVesselStake = async (vessel, asset) => th.getVesselStake(contracts.core, vessel, asset)
 
-	let TRI_GAS_COMPENSATION_ERC20
 	let MIN_NET_DEBT_ERC20
 
 	withProxy = false
@@ -62,7 +61,6 @@ contract("BorrowerOperations", async accounts => {
 		before(async () => {
 			await deploy(treasury, [])
 
-			TRI_GAS_COMPENSATION_ERC20 = await adminContract.getDebtTokenGasCompensation(erc20.address)
 			MIN_NET_DEBT_ERC20 = await adminContract.getMinNetDebt(erc20.address)
 			BORROWING_FEE_ERC20 = await adminContract.getBorrowingFee(erc20.address)
 
@@ -592,7 +590,7 @@ contract("BorrowerOperations", async accounts => {
 			}
 		})
 
-		it("withdrawColl(): doesn’t allow a user to completely withdraw all collateral from their Vessel (due to gas compensation)", async () => {
+		it("withdrawColl(): doesn’t allow a user to completely withdraw all collateral from their Vessel", async () => {
 			await openVessel({
 				asset: erc20.address,
 				ICR: toBN(dec(2, 18)),
@@ -3496,9 +3494,7 @@ contract("BorrowerOperations", async accounts => {
 			// Alice transfers tokens to bob to compensate borrowing fees
 			await debtToken.transfer(bob, bobBorrowingFee, { from: alice })
 
-			const remainingDebt_Asset = (await vesselManager.getVesselDebt(erc20.address, bob)).sub(
-				TRI_GAS_COMPENSATION_ERC20
-			)
+			const remainingDebt_Asset = (await vesselManager.getVesselDebt(erc20.address, bob))
 
 			// Bob attempts an adjustment that would repay 1 wei more than his debt
 			await assertRevert(
@@ -4036,7 +4032,7 @@ contract("BorrowerOperations", async accounts => {
 			)
 		})
 
-		it("adjustVessel(): new coll = 0 and new debt = 0 is not allowed, as gas compensation still counts toward ICR", async () => {
+		it("adjustVessel(): new coll = 0 and new debt = 0 is not allowed", async () => {
 			await openVessel({
 				asset: erc20.address,
 				extraTRIAmount: toBN(dec(10000, 18)),
@@ -4787,7 +4783,7 @@ contract("BorrowerOperations", async accounts => {
 
 			const aliceDebt_Asset = await getVesselEntireDebt(alice, erc20.address)
 			assert.isTrue(aliceDebt_Asset.gt(toBN("0")))
-			const netDebt = aliceDebt_Asset.sub(TRI_GAS_COMPENSATION_ERC20)
+			const netDebt = aliceDebt_Asset
 
 			// to compensate borrowing fees
 			await debtToken.transfer(alice, await debtToken.balanceOf(dennis), { from: dennis })
@@ -5755,7 +5751,7 @@ contract("BorrowerOperations", async accounts => {
 
 				th.assertIsApproximatelyEqual(
 					newDebt_Asset,
-					D_TRIRequest.add(emittedFee_Asset).add(TRI_GAS_COMPENSATION_ERC20),
+					D_TRIRequest.add(emittedFee_Asset),
 					100000
 				)
 			})
@@ -6110,7 +6106,7 @@ contract("BorrowerOperations", async accounts => {
 
 			const expectedDebt_Asset = TRIRequestERC20.add(
 				await vesselManager.getBorrowingFee(erc20.address, TRIRequestERC20)
-			).add(TRI_GAS_COMPENSATION_ERC20)
+			)
 
 			const debt_After_Asset = await getVesselEntireDebt(alice, erc20.address)
 			const coll_After_Asset = await getVesselEntireColl(alice, erc20.address)
@@ -6580,24 +6576,6 @@ contract("BorrowerOperations", async accounts => {
 			})
 		})
 
-		// --- getCompositeDebt ---
-
-		it("getCompositeDebt(): returns debt + gas comp", async () => {
-			assert.equal(
-				await borrowerOperations.getCompositeDebt(erc20.address, "0"),
-				TRI_GAS_COMPENSATION_ERC20.toString()
-			)
-
-			th.assertIsApproximatelyEqual(
-				await borrowerOperations.getCompositeDebt(erc20.address, dec(90, 18)),
-				TRI_GAS_COMPENSATION_ERC20.add(toBN(dec(90, 18)))
-			)
-			th.assertIsApproximatelyEqual(
-				await borrowerOperations.getCompositeDebt(erc20.address, dec(24423422357345049, 12)),
-				TRI_GAS_COMPENSATION_ERC20.add(toBN(dec(24423422357345049, 12)))
-			)
-		})
-
 		//  --- getNewTCRFromVesselChange  - (external wrapper in Tester contract calls internal function) ---
 
 		describe("getNewTCRFromVesselChange() returns the correct TCR", async () => {
@@ -6789,7 +6767,7 @@ contract("BorrowerOperations", async accounts => {
 
 				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
 
-				const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
+				const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 					th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 				await priceFeed.setPrice(erc20.address, dec(200, 18))
@@ -6834,7 +6812,7 @@ contract("BorrowerOperations", async accounts => {
 
 				assert.isFalse(await sortedVessels.contains(erc20.address, bob))
 
-				const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
+				const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 					th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 				await priceFeed.setPrice(erc20.address, dec(200, 18))

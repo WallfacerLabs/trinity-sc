@@ -322,11 +322,11 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		assert.equal(totalStakesSnaphot_before_Asset, A_coll_Asset.add(B_coll_Asset))
 		assert.equal(
 			totalCollateralSnapshot_before_Asset,
-			A_coll_Asset.add(B_coll_Asset).add(th.applyLiquidationFee(D_coll_Asset))
+			A_coll_Asset.add(B_coll_Asset).add(D_coll_Asset)
 		)
 
-		const A_reward_Asset = th.applyLiquidationFee(D_coll_Asset).mul(A_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
-		const B_reward_Asset = th.applyLiquidationFee(D_coll_Asset).mul(B_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
+		const A_reward_Asset = D_coll_Asset.mul(A_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
+		const B_reward_Asset = D_coll_Asset.mul(B_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
 
 		// Liquidate Bob
 		await vesselManagerOperations.liquidate(erc20.address, bob, { from: owner })
@@ -335,11 +335,11 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		const totalCollateralSnapshot_After_Asset = await vesselManager.totalCollateralSnapshot(erc20.address)
 
 		assert.equal(totalStakesSnaphot_After_Asset.toString(), A_coll_Asset)
-		// total collateral should always be 9 minus gas compensations, as all liquidations in this test case are full redistributions
+		// total collateral should always be 9, as all liquidations in this test case are full redistributions
 		assert.isAtMost(
 			th.getDifference(
 				totalCollateralSnapshot_After_Asset,
-				A_coll_Asset.add(A_reward_Asset).add(th.applyLiquidationFee(B_coll_Asset.add(B_reward_Asset)))
+				A_coll_Asset.add(A_reward_Asset).add(B_coll_Asset.add(B_reward_Asset))
 			),
 			1000
 		) // 3 + 4.5*0.995 + 1.5*0.995^2
@@ -535,8 +535,8 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		// Dennis is liquidated
 		await vesselManagerOperations.liquidate(erc20.address, dennis, { from: owner })
 
-		const A_reward_Asset = th.applyLiquidationFee(D_coll_Asset).mul(A_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
-		const B_reward_Asset = th.applyLiquidationFee(D_coll_Asset).mul(B_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
+		const A_reward_Asset = D_coll_Asset.mul(A_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
+		const B_reward_Asset = D_coll_Asset.mul(B_coll_Asset).div(A_coll_Asset.add(B_coll_Asset))
 
 		/*
     Prior to Dennis liquidation, total stakes and total collateral were each 27 ether.
@@ -550,7 +550,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		assert.equal(totalStakesSnaphot_2_Asset, A_coll_Asset.add(B_coll_Asset))
 		assert.equal(
 			totalCollateralSnapshot_2_Asset,
-			A_coll_Asset.add(B_coll_Asset).add(th.applyLiquidationFee(D_coll_Asset))
+			A_coll_Asset.add(B_coll_Asset).add(D_coll_Asset)
 		) // 24 + 3*0.995
 
 		// check Bob's ICR is now in range 100% < ICR 110%
@@ -572,12 +572,12 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		const totalCollateralSnapshot_3_Asset = await vesselManager.totalCollateralSnapshot(erc20.address)
 
 		assert.equal(totalStakesSnaphot_3_Asset.toString(), A_coll_Asset)
-		// total collateral should always be 27 minus gas compensations, as all liquidations in this test case are full redistributions
+		// total collateral should always be 27, as all liquidations in this test case are full redistributions
 
 		assert.isAtMost(
 			th.getDifference(
 				totalCollateralSnapshot_3_Asset.toString(),
-				A_coll_Asset.add(A_reward_Asset).add(th.applyLiquidationFee(B_coll_Asset.add(B_reward_Asset)))
+				A_coll_Asset.add(A_reward_Asset).add(B_coll_Asset.add(B_reward_Asset))
 			),
 			1000
 		)
@@ -689,7 +689,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 
 		const aliceDeposit_Asset = await stabilityPool.getCompoundedDebtTokenDeposits(alice)
 		const aliceETHGain_Asset = await getDepositorGain(alice, validCollateral, erc20.address)
-		const aliceExpectedETHGain_Asset = spDeposit.mul(th.applyLiquidationFee(B_coll_Asset)).div(B_totalDebt_Asset)
+		const aliceExpectedETHGain_Asset = spDeposit.mul(B_coll_Asset).div(B_totalDebt_Asset)
 
 		assert.equal(aliceDeposit_Asset.toString(), 0)
 		assert.equal(aliceETHGain_Asset.toString(), aliceExpectedETHGain_Asset)
@@ -717,11 +717,9 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		assert.isAtMost(
 			th.getDifference(
 				L_ETH_Asset,
-				th.applyLiquidationFee(
 					B_coll_Asset.sub(B_coll_Asset.mul(spDeposit).div(B_totalDebt_Asset))
 						.mul(mv._1e18BN)
 						.div(A_coll_Asset.add(D_coll_Asset))
-				)
 			),
 			100
 		)
@@ -848,7 +846,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		/* Check accrued Stability Pool rewards after. Total Pool deposits was 1490 TRI, Alice sole depositor.
     As liquidated debt (250 TRI) was completely offset
     Alice's expected compounded deposit: (1490 - 250) = 1240TRI
-    Alice's expected ETH gain:  Bob's liquidated capped coll (minus gas comp), 2.75*0.995 ether
+    Alice's expected ETH gain:  Bob's liquidated capped coll, 2.75*0.995 ether
 
     */
 		const aliceExpectedDeposit_Asset = await stabilityPool.getCompoundedDebtTokenDeposits(alice)
@@ -856,10 +854,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 
 		assert.isAtMost(th.getDifference(aliceExpectedDeposit_Asset.toString(), spDeposit.sub(B_totalDebt_Asset)), 2000)
 		assert.isAtMost(
-			th.getDifference(
-				aliceExpectedETHGain_Asset,
-				th.applyLiquidationFee(B_totalDebt_Asset.mul(th.toBN(dec(11, 17))).div(price))
-			),
+			th.getDifference( aliceExpectedETHGain_Asset, B_totalDebt_Asset.mul(th.toBN(dec(11, 17))).div(price)),
 			3000
 		)
 
@@ -928,7 +923,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		/* Check accrued Stability Pool rewards after. Total Pool deposits was 1490 TRI, Alice sole depositor.
     As liquidated debt (250 TRI) was completely offset
     Alice's expected compounded deposit: (1490 - 250) = 1240TRI
-    Alice's expected ETH gain:  Bob's liquidated capped coll (minus gas comp), 2.75*0.995 ether
+    Alice's expected ETH gain:  Bob's liquidated capped coll, 2.75*0.995 ether
     */
 
 		const aliceExpectedDeposit_Asset = await stabilityPool.getCompoundedDebtTokenDeposits(alice)
@@ -938,7 +933,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		assert.isAtMost(
 			th.getDifference(
 				aliceExpectedETHGain_Asset,
-				th.applyLiquidationFee(B_totalDebt_Asset.mul(th.toBN(dec(11, 17))).div(price))
+				B_totalDebt_Asset.mul(th.toBN(dec(11, 17))).div(price)
 			),
 			3000
 		)
@@ -2185,8 +2180,13 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 
 		const dennis_Deposit_Before_Asset = (await stabilityPool.getCompoundedDebtTokenDeposits(dennis)).toString()
 		const dennis_ETHGain_Before_Asset = (await getDepositorGain(dennis, validCollateral, erc20.address)).toString()
-		assert.isAtMost(th.getDifference(dennis_Deposit_Before_Asset, spDeposit_Asset.sub(C_totalDebt_Asset)), 1000)
-		assert.isAtMost(th.getDifference(dennis_ETHGain_Before_Asset, th.applyLiquidationFee(C_coll_Asset)), 1000)
+
+		const lastDebtTokenLossError_Offset = (await stabilityPool.lastDebtTokenLossError_Offset()).div(toBN(10).pow(toBN(18)))
+		const idx = (await adminContract.getValidCollateral()).indexOf(erc20.address)
+		const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(idx)).div(toBN(10).pow(toBN(18)))
+
+		assert.equal(th.getDifference(dennis_Deposit_Before_Asset, spDeposit_Asset.sub(C_totalDebt_Asset)).toString(), lastDebtTokenLossError_Offset.toString())
+		assert.equal(th.getDifference(dennis_ETHGain_Before_Asset, C_coll_Asset).toString(), lastAssetError_Offset.toString())
 
 		// Attempt to liquidate Dennis
 
@@ -3053,7 +3053,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		assert.isTrue(TCR_After_Asset.gte(TCR_Before_Asset))
 	})
 
-	it("liquidateVessels(): a liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
+	it("liquidateVessels(): a liquidation sequence of pure redistributions decreases the TCR, but up to 0.5%", async () => {
 		const { collateral: W_coll_Asset, totalDebt: W_totalDebt_Asset } = await openVessel({
 			asset: erc20.address,
 			ICR: toBN(dec(250, 16)),
@@ -3153,7 +3153,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		const totalCollAfter_Asset = W_coll_Asset.add(A_coll_Asset)
 			.add(C_coll_Asset)
 			.add(D_coll_Asset)
-			.add(th.applyLiquidationFee(d1_coll_Asset.add(d2_coll_Asset).add(d3_coll_Asset).add(d4_coll_Asset)))
+			.add(d1_coll_Asset.add(d2_coll_Asset).add(d3_coll_Asset).add(d4_coll_Asset))
 		const totalDebtAfter_Asset = W_totalDebt_Asset.add(A_totalDebt_Asset)
 			.add(C_totalDebt_Asset)
 			.add(D_totalDebt_Asset)
@@ -3402,11 +3402,9 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		th.assertIsApproximatelyEqual(liquidatedDebt_Asset, F_totalDebt_Asset.add(G_totalDebt_Asset))
 		th.assertIsApproximatelyEqual(
 			liquidatedColl_Asset,
-			th.applyLiquidationFee(
 				F_totalDebt_Asset.add(G_totalDebt_Asset)
 					.mul(toBN(dec(11, 17)))
 					.div(price)
-			)
 		)
 
 		// check collateral surplus
@@ -3540,11 +3538,9 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		th.assertIsApproximatelyEqual(liquidatedDebt_Asset, F_totalDebt_Asset.add(G_totalDebt_Asset))
 		th.assertIsApproximatelyEqual(
 			liquidatedColl_Asset,
-			th.applyLiquidationFee(
 				F_totalDebt_Asset.add(G_totalDebt_Asset)
 					.mul(toBN(dec(11, 17)))
 					.div(price)
-			)
 		)
 
 		// check collateral surplus
@@ -3773,21 +3769,21 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		assert.isAtMost(
 			th.getDifference(
 				whale_ETHGain_Asset,
-				th.applyLiquidationFee(liquidatedColl_Asset.mul(W_TRIAmount_Asset).div(totalDeposit_Asset))
+				liquidatedColl_Asset.mul(W_TRIAmount_Asset).div(totalDeposit_Asset)
 			),
 			2000
 		)
 		assert.isAtMost(
 			th.getDifference(
 				alice_ETHGain_Asset,
-				th.applyLiquidationFee(liquidatedColl_Asset.mul(A_TRIAmount_Asset).div(totalDeposit_Asset))
+				liquidatedColl_Asset.mul(A_TRIAmount_Asset).div(totalDeposit_Asset)
 			),
 			2000
 		)
 		assert.isAtMost(
 			th.getDifference(
 				bob_ETHGain_Asset,
-				th.applyLiquidationFee(liquidatedColl_Asset.mul(B_TRIAmount_Asset).div(totalDeposit_Asset))
+				liquidatedColl_Asset.mul(B_TRIAmount_Asset).div(totalDeposit_Asset)
 			),
 			2000
 		)
@@ -3798,7 +3794,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		const total_ETHinSP_Asset = (await stabilityPool.getCollateral(erc20.address)).toString()
 
 		assert.isAtMost(th.getDifference(total_TRIinSP_Asset, totalDeposit_Asset.sub(liquidatedDebt_Asset)), 1000)
-		assert.isAtMost(th.getDifference(total_ETHinSP_Asset, th.applyLiquidationFee(liquidatedColl_Asset)), 1000)
+		assert.isAtMost(th.getDifference(total_ETHinSP_Asset, liquidatedColl_Asset), 1000)
 	})
 
 	it("liquidateVessels(): Liquidating vessels at ICR <=100% with SP deposits does not alter their deposit or ETH gain", async () => {
@@ -4354,19 +4350,14 @@ contract("VesselManager - in Recovery Mode", async accounts => {
     That leaves 50 TRI in the Pool which won’t be enough for any other liquidation */
 		const liquidationTx_Asset = await vesselManagerOperations.liquidateVessels(erc20.address, 10)
 
-		const [liquidatedDebt_Asset, liquidatedColl_Asset, collGasComp_Asset, TRIGasComp_Asset] =
+		const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 			th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 		th.assertIsApproximatelyEqual(liquidatedDebt_Asset, A_totalDebt_Asset.add(B_totalDebt_Asset))
 		const equivalentColl_Asset = A_totalDebt_Asset.add(B_totalDebt_Asset)
 			.mul(toBN(dec(11, 17)))
 			.div(price)
-		th.assertIsApproximatelyEqual(liquidatedColl_Asset, th.applyLiquidationFee(equivalentColl_Asset))
-		th.assertIsApproximatelyEqual(
-			collGasComp_Asset,
-			equivalentColl_Asset.sub(th.applyLiquidationFee(equivalentColl_Asset))
-		) // 0.5% of 283/120*1.1
-		assert.equal(TRIGasComp_Asset.toString(), dec(400, 18))
+		th.assertIsApproximatelyEqual(liquidatedColl_Asset, equivalentColl_Asset)
 
 		// check collateral surplus
 
@@ -5324,7 +5315,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		const vesselsToLiquidate = [alice, bob, carol]
 		const liquidationTx_Asset = await vesselManagerOperations.batchLiquidateVessels(erc20.address, vesselsToLiquidate)
 
-		const [liquidatedDebt_Asset, liquidatedColl_Asset, collGasComp_Asset, TRIGasComp_Asset] =
+		const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 			th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 		th.assertIsApproximatelyEqual(liquidatedDebt_Asset, A_totalDebt_Asset.add(B_totalDebt_Asset))
@@ -5333,14 +5324,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 			.mul(toBN(dec(11, 17)))
 			.div(price)
 
-		th.assertIsApproximatelyEqual(liquidatedColl_Asset, th.applyLiquidationFee(equivalentColl_Asset))
-		th.assertIsApproximatelyEqual(
-			collGasComp_Asset,
-			equivalentColl_Asset.sub(th.applyLiquidationFee(equivalentColl_Asset))
-		) // 0.5% of 283/120*1.1
-
-		assert.equal(TRIGasComp_Asset.toString(), dec(400, 18))
-
+		th.assertIsApproximatelyEqual(liquidatedColl_Asset, equivalentColl_Asset)
 		// check collateral surplus
 
 		const alice_remainingCollateral_Asset = A_coll_Asset.sub(A_totalDebt_Asset.mul(th.toBN(dec(11, 17))).div(price))
@@ -5928,7 +5912,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		// Attempt liqudation sequence
 
 		const liquidationTx_Asset = await vesselManagerOperations.batchLiquidateVessels(erc20.address, vesselsToLiquidate)
-		const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
+		const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 			th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 		// Check F and G were liquidated
@@ -5949,11 +5933,9 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		th.assertIsApproximatelyEqual(liquidatedDebt_Asset, F_totalDebt_Asset.add(G_totalDebt_Asset))
 		th.assertIsApproximatelyEqual(
 			liquidatedColl_Asset,
-			th.applyLiquidationFee(
 				F_totalDebt_Asset.add(G_totalDebt_Asset)
 					.mul(toBN(dec(11, 17)))
 					.div(price)
-			)
 		)
 
 		// check collateral surplus
@@ -6059,7 +6041,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		// Attempt liqudation sequence
 
 		const liquidationTx_Asset = await vesselManagerOperations.batchLiquidateVessels(erc20.address, vesselsToLiquidate)
-		const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
+		const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 			th.getEmittedLiquidationValues(liquidationTx_Asset)
 
 		// Check F and G were liquidated
@@ -6094,11 +6076,9 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		th.assertIsApproximatelyEqual(liquidatedDebt_Asset, F_totalDebt_Asset.add(G_totalDebt_Asset))
 		th.assertIsApproximatelyEqual(
 			liquidatedColl_Asset,
-			th.applyLiquidationFee(
 				F_totalDebt_Asset.add(G_totalDebt_Asset)
 					.mul(toBN(dec(11, 17)))
 					.div(price)
-			)
 		)
 
 		// check collateral surplus

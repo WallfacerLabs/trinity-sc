@@ -11,18 +11,6 @@ contract VesselManagerTester is VesselManager {
 		return TrinityMath._computeCR(_coll, _debt, _price);
 	}
 
-	function getCollGasCompensation(address _asset, uint256 _coll) external view returns (uint256) {
-		return _getCollGasCompensation(_asset, _coll);
-	}
-
-	function getDebtTokenGasCompensation(address _asset) external view returns (uint256) {
-		return IAdminContract(adminContract).getDebtTokenGasCompensation(_asset);
-	}
-
-	function getCompositeDebt(address _asset, uint256 _debt) external view returns (uint256) {
-		return _getCompositeDebt(_asset, _debt);
-	}
-
 	function unprotectedDecayBaseRateFromBorrowing(address _asset) external returns (uint256) {
 		baseRate[_asset] = _calcDecayedBaseRate(_asset);
 		assert(baseRate[_asset] >= 0 && baseRate[_asset] <= DECIMAL_PRECISION);
@@ -45,10 +33,6 @@ contract VesselManagerTester is VesselManager {
 
 	function callGetRedemptionFee(address _asset, uint256 _ETHDrawn) external view returns (uint256) {
 		return getRedemptionFee(_asset, _ETHDrawn);
-	}
-
-	function getActualDebtFromComposite(address _asset, uint256 _debtVal) external view returns (uint256) {
-		return _getNetDebt(_asset, _debtVal);
 	}
 
 	function callInternalRemoveVesselOwner(address _asset, address _vesselOwner) external {

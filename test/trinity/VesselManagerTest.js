@@ -259,7 +259,7 @@ contract("VesselManager", async accounts => {
 				const defaultPool_ETH_After_Asset = (await defaultPool.getAssetBalance(erc20.address)).toString()
 				const defaultPool_RawEther_After_Asset = (await erc20.balanceOf(defaultPool.address)).toString()
 				const defaultPooL_TRIDebt_After_Asset = (await defaultPool.getDebtTokenBalance(erc20.address)).toString()
-				const defaultPool_ETH_Asset = th.applyLiquidationFee(B_collateral_Asset)
+				const defaultPool_ETH_Asset = B_collateral_Asset
 				assert.equal(defaultPool_ETH_After_Asset, defaultPool_ETH_Asset)
 				assert.equal(defaultPool_RawEther_After_Asset, defaultPool_ETH_Asset)
 				th.assertIsApproximatelyEqual(defaultPooL_TRIDebt_After_Asset, B_totalDebt_Asset)
@@ -434,7 +434,7 @@ contract("VesselManager", async accounts => {
 				assert.equal(totalStakesSnapshot_After_Asset, A_collateral_Asset)
 				assert.equal(
 					totalCollateralSnapshot_After_Asset,
-					A_collateral_Asset.add(th.applyLiquidationFee(B_collateral_Asset))
+					A_collateral_Asset.add(B_collateral_Asset)
 				)
 			})
 
@@ -473,8 +473,7 @@ contract("VesselManager", async accounts => {
 				const L_ETH_AfterCarolLiquidated_Asset = await vesselManager.L_Colls(erc20.address)
 				const L_TRIDebt_AfterCarolLiquidated_Asset = await vesselManager.L_Debts(erc20.address)
 
-				const L_ETH_expected_1_Asset = th
-					.applyLiquidationFee(C_collateral_Asset)
+				const L_ETH_expected_1_Asset = C_collateral_Asset
 					.mul(mv._1e18BN)
 					.div(A_collateral_Asset.add(B_collateral_Asset))
 				const L_TRIDebt_expected_1_Asset = C_totalDebt_Asset.mul(mv._1e18BN).div(
@@ -517,10 +516,9 @@ contract("VesselManager", async accounts => {
    L_TRIDebt = (180 / 20) + (890 / 10) = 98 TRI */
 
 				const L_ETH_expected_2_Asset = L_ETH_expected_1_Asset.add(
-					th
-						.applyLiquidationFee(B_collateral_Asset.add(B_collateral_Asset.mul(L_ETH_expected_1_Asset).div(mv._1e18BN)))
-						.mul(mv._1e18BN)
-						.div(A_collateral_Asset)
+					B_collateral_Asset.add(B_collateral_Asset.mul(L_ETH_expected_1_Asset).div(mv._1e18BN))
+					.mul(mv._1e18BN)
+					.div(A_collateral_Asset)
 				)
 				const L_TRIDebt_expected_2 = L_TRIDebt_expected_1_Asset.add(
 					B_totalDebt_Asset.add(B_increasedTotalDebt_Asset)
@@ -935,30 +933,22 @@ contract("VesselManager", async accounts => {
 				// Check TCR does not decrease with each liquidation
 				const liquidationTx_1_Asset = await vesselManagerOperations.liquidate(erc20.address, defaulter_1)
 
-				const [liquidatedDebt_1_Asset, liquidatedColl_1_Asset, gasComp_1_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_1_Asset)
-
 				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_1))
 				const TCR_1_Asset = await th.getTCR(contracts.core, erc20.address)
 
-				// Expect only change to TCR to be due to the issued gas compensation	.div(entireSystemDebtBefore)
+				// Expect only change to TCR to be due to the .div(entireSystemDebtBefore)
 				const expectedTCR_1_Asset = entireSystemCollBefore_Asset
-					.sub(gasComp_1_Asset)
 					.mul(price)
 					.div(entireSystemDebtBefore_Asset)
 
 				assert.isTrue(expectedTCR_1_Asset.eq(TCR_1_Asset))
 
 				const liquidationTx_2_Asset = await vesselManagerOperations.liquidate(erc20.address, defaulter_2)
-				const [liquidatedDebt_2_Asset, liquidatedColl_2_Asset, gasComp_2_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_2_Asset)
 				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_2))
 
 				const TCR_2_Asset = await th.getTCR(contracts.core, erc20.address)
 
 				const expectedTCR_2_Asset = entireSystemCollBefore_Asset
-					.sub(gasComp_1_Asset)
-					.sub(gasComp_2_Asset)
 					.mul(price)
 					.div(entireSystemDebtBefore_Asset)
 
@@ -966,33 +956,23 @@ contract("VesselManager", async accounts => {
 
 				const liquidationTx_3_Asset = await vesselManagerOperations.liquidate(erc20.address, defaulter_3)
 
-				const [liquidatedDebt_3_Asset, liquidatedColl_3_Asset, gasComp_3_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_3_Asset)
 				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_3))
 
 				const TCR_3_Asset = await th.getTCR(contracts.core, erc20.address)
 
 				const expectedTCR_3_Asset = entireSystemCollBefore_Asset
-					.sub(gasComp_1_Asset)
-					.sub(gasComp_2_Asset)
-					.sub(gasComp_3_Asset)
 					.mul(price)
 					.div(entireSystemDebtBefore_Asset)
 
 				assert.isTrue(expectedTCR_3_Asset.eq(TCR_3_Asset))
 
 				const liquidationTx_4_Asset = await vesselManagerOperations.liquidate(erc20.address, defaulter_4)
-				const [liquidatedDebt_4_Asset, liquidatedColl_4_Asset, gasComp_4_Asset] =
-					th.getEmittedLiquidationValues(liquidationTx_4_Asset)
+
 				assert.isFalse(await sortedVessels.contains(erc20.address, defaulter_4))
 
 				const TCR_4_Asset = await th.getTCR(contracts.core, erc20.address)
 
 				const expectedTCR_4_Asset = entireSystemCollBefore_Asset
-					.sub(gasComp_1_Asset)
-					.sub(gasComp_2_Asset)
-					.sub(gasComp_3_Asset)
-					.sub(gasComp_4_Asset)
 					.mul(price)
 					.div(entireSystemDebtBefore_Asset)
 
@@ -1092,7 +1072,7 @@ contract("VesselManager", async accounts => {
 				// Carol gets liquidated
 				await priceFeed.setPrice(erc20.address, dec(100, 18))
 				const liquidationTX_C_Asset = await vesselManagerOperations.liquidate(erc20.address, carol)
-				const [liquidatedDebt_Asset, liquidatedColl_Asset, gasComp_Asset] =
+				const [liquidatedDebt_Asset, liquidatedColl_Asset] =
 					th.getEmittedLiquidationValues(liquidationTX_C_Asset)
 				assert.isFalse(await sortedVessels.contains(erc20.address, carol))
 
@@ -1173,7 +1153,7 @@ contract("VesselManager", async accounts => {
 				const bob_ETHGain_Before_Asset = (await stabilityPool.getDepositorGains(bob, validCollateral))[1][idx]
 
 				assert.isAtMost(th.getDifference(bob_Deposit_Before_Asset, B_spDeposit.sub(C_debt_Asset)), 1000000)
-				assert.isAtMost(th.getDifference(bob_ETHGain_Before_Asset, th.applyLiquidationFee(C_collateral_Asset)), 1000)
+				assert.isAtMost(th.getDifference(bob_ETHGain_Before_Asset, C_collateral_Asset), 1000)
 
 				// Alice provides TRI to SP
 				await stabilityPool.provideToSP(A_spDeposit, validCollateral, { from: alice })
@@ -1205,19 +1185,22 @@ contract("VesselManager", async accounts => {
 
 				const totalDeposits_Asset = bob_Deposit_Before_Asset.add(A_spDeposit)
 
+				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(idx)).div(toBN(10).pow(toBN(18)))
+				const lastDebtTokenLossError_Offset = (await stabilityPool.lastDebtTokenLossError_Offset()).div(toBN(10).pow(toBN(18)))
+
 				assert.isAtMost(
 					th.getDifference(
 						alice_Deposit_After_Asset,
 						A_spDeposit.sub(B_debt_Asset.mul(A_spDeposit).div(totalDeposits_Asset))
 					),
-					1000000
+					lastDebtTokenLossError_Offset
 				)
 				assert.isAtMost(
 					th.getDifference(
 						alice_ETHGain_After_Asset,
-						th.applyLiquidationFee(B_collateral_Asset).mul(A_spDeposit).div(totalDeposits_Asset)
+						B_collateral_Asset.mul(A_spDeposit).div(totalDeposits_Asset)
 					),
-					1000000
+					lastAssetError_Offset
 				)
 
 				const bob_Deposit_After_Asset = await stabilityPool.getCompoundedDebtTokenDeposits(bob)
@@ -1228,16 +1211,16 @@ contract("VesselManager", async accounts => {
 						bob_Deposit_After_Asset,
 						bob_Deposit_Before_Asset.sub(B_debt_Asset.mul(bob_Deposit_Before_Asset).div(totalDeposits_Asset))
 					),
-					1000000
+					lastDebtTokenLossError_Offset
 				)
 				assert.isAtMost(
 					th.getDifference(
 						bob_ETHGain_After_Asset,
 						bob_ETHGain_Before_Asset.add(
-							th.applyLiquidationFee(B_collateral_Asset).mul(bob_Deposit_Before_Asset).div(totalDeposits_Asset)
+							B_collateral_Asset.mul(bob_Deposit_Before_Asset).div(totalDeposits_Asset)
 						)
 					),
-					1000000
+					lastAssetError_Offset
 				)
 			})
 
@@ -2171,7 +2154,7 @@ contract("VesselManager", async accounts => {
 				assert.isTrue(TCR_After_Asset.gte(TCR_Before_Asset))
 			})
 
-			it("liquidateVessels(): a liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
+			it("liquidateVessels(): a liquidation sequence of pure redistributions decreases the TCR, but up to 0.5%", async () => {
 				const { collateral: W_coll_Asset, totalDebt: W_debt_Asset } = await openVessel({
 					asset: erc20.address,
 					ICR: toBN(dec(100, 18)),
@@ -2275,7 +2258,7 @@ contract("VesselManager", async accounts => {
 					th.getDifference(
 						TCR_After_Asset,
 						totalCollNonDefaulters_Asset
-							.add(th.applyLiquidationFee(totalCollDefaulters_Asset))
+							.add(totalCollDefaulters_Asset)
 							.mul(price)
 							.div(totalDebt_Asset)
 					),
@@ -2414,21 +2397,21 @@ contract("VesselManager", async accounts => {
 				assert.isAtMost(
 					th.getDifference(
 						whale_ETHGain_Asset,
-						th.applyLiquidationFee(liquidatedColl_Asset).mul(whaleDeposit).div(totalDeposits_Asset)
+						liquidatedColl_Asset.mul(whaleDeposit).div(totalDeposits_Asset)
 					),
 					100000
 				)
 				assert.isAtMost(
 					th.getDifference(
 						alice_ETHGain_Asset,
-						th.applyLiquidationFee(liquidatedColl_Asset).mul(A_deposit).div(totalDeposits_Asset)
+						liquidatedColl_Asset.mul(A_deposit).div(totalDeposits_Asset)
 					),
 					100000
 				)
 				assert.isAtMost(
 					th.getDifference(
 						bob_ETHGain_Asset,
-						th.applyLiquidationFee(liquidatedColl_Asset).mul(B_deposit).div(totalDeposits_Asset)
+						liquidatedColl_Asset.mul(B_deposit).div(totalDeposits_Asset)
 					),
 					100000
 				)
@@ -2439,7 +2422,7 @@ contract("VesselManager", async accounts => {
 				const total_ETHinSP_Asset = (await stabilityPool.getCollateral(erc20.address)).toString()
 
 				assert.isAtMost(th.getDifference(total_TRIinSP_Asset, totalDeposits_Asset.sub(liquidatedDebt_Asset)), 1000)
-				assert.isAtMost(th.getDifference(total_ETHinSP_Asset, th.applyLiquidationFee(liquidatedColl_Asset)), 1000)
+				assert.isAtMost(th.getDifference(total_ETHinSP_Asset, liquidatedColl_Asset), 1000)
 			})
 		})
 
@@ -3319,7 +3302,7 @@ contract("VesselManager", async accounts => {
 
 				// check that Dennis' redeemed 20 debt tokens have been cancelled with debt from Bobs's Vessel (8) and Carol's Vessel (10).
 				// The remaining lot (2) is sent to Alice's Vessel, who had the best ICR.
-				// It leaves her with (3) debt tokens + 50 for gas compensation.
+				// It leaves her with (3) debt tokens.
 				th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
 				assert.equal(bob_debt_After, "0")
 				assert.equal(carol_debt_After, "0")
@@ -3420,7 +3403,7 @@ contract("VesselManager", async accounts => {
 
 				// check that Dennis' redeemed 20 debt tokens have been cancelled with debt from Bobs's Vessel (8) and Carol's Vessel (10).
 				// The remaining lot (2) is sent to Alice's Vessel, who had the best ICR.
-				// It leaves her with (3) debt tokens + 50 for gas compensation.
+				// It leaves her with (3) debt tokens.
 				th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
 				assert.equal(bob_debt_After, "0")
 				assert.equal(carol_debt_After, "0")
@@ -3520,7 +3503,7 @@ contract("VesselManager", async accounts => {
 
 				// check that Dennis' redeemed 20 debt tokens have been cancelled with debt from Bobs's Vessel (8) and Carol's Vessel (10).
 				// The remaining lot (2) is sent to Alice's Vessel, who had the best ICR.
-				// It leaves her with (3) debt tokens + 50 for gas compensation.
+				// It leaves her with (3) debt tokens.
 				th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
 				assert.equal(bob_debt_After, "0")
 				assert.equal(carol_debt_After, "0")
@@ -3631,7 +3614,7 @@ contract("VesselManager", async accounts => {
 
 				// check that Dennis' redeemed 20 debt tokens have been cancelled with debt from Bobs's Vessel (8) and Carol's Vessel (10).
 				// The remaining lot (2) is sent to Alice's Vessel, who had the best ICR.
-				// It leaves her with (3) debt tokens + 50 for gas compensation.
+				// It leaves her with (3) debt tokens.
 				th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
 
 				assert.equal(bob_debt_After, "0")
@@ -3884,7 +3867,7 @@ contract("VesselManager", async accounts => {
 				// A's remaining debt = 10,000 (A) + 20,0000 (B) + 30,000 (C) - 55,000 (R) = 5,000
 				const A_debt_Asset = await vesselManager.getVesselDebt(erc20.address, A)
 
-				th.assertIsApproximatelyEqual(A_debt_Asset, dec(4600, 18), 1000)
+				th.assertIsApproximatelyEqual(A_debt_Asset, dec(5000, 18), 10)
 			})
 
 			it("redeemCollateral(): doesn't perform partial redemption if resultant debt would be < minimum net debt", async () => {
@@ -6785,7 +6768,7 @@ contract("VesselManager", async accounts => {
 				const A_Debt_Asset = await vesselManager.getVesselDebt(erc20.address, A)
 				const B_Debt_Asset = await vesselManager.getVesselDebt(erc20.address, B)
 
-				// Expect debt = requested + 0.5% fee + 50 (due to gas comp)
+				// Expect debt = requested + 0.5% fee
 
 				assert.equal(A_Debt_Asset, totalDebtA_Asset.toString())
 				assert.equal(B_Debt_Asset, totalDebtB_Asset.toString())

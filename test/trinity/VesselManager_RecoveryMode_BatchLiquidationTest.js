@@ -182,10 +182,10 @@ contract("VesselManager - in Recovery Mode - back to normal mode in 1 tx", async
 			const spEthAfter_Asset = await stabilityPool.getCollateral(erc20.address)
 			const spGRVTfter_Asset = await stabilityPool.getTotalDebtTokenDeposits()
 
-			// liquidate collaterals with the gas compensation fee subtracted
+			// liquidate collaterals
 
-			const expectedCollateralLiquidatedA_Asset = th.applyLiquidationFee(A_totalDebt_Asset.mul(mv._MCR).div(price))
-			const expectedCollateralLiquidatedC_Asset = th.applyLiquidationFee(C_coll_Asset)
+			const expectedCollateralLiquidatedA_Asset = A_totalDebt_Asset.mul(mv._MCR).div(price)
+			const expectedCollateralLiquidatedC_Asset = C_coll_Asset
 			// Stability Pool gains
 
 			const expectedGainInTRI_Asset = expectedCollateralLiquidatedA_Asset

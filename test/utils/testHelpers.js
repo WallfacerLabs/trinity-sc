@@ -208,9 +208,6 @@ class TestHelper {
 		return gas
 	}
 
-	static applyLiquidationFee(ethAmount) {
-		return ethAmount.mul(this.toBN(this.dec(995, 15))).div(MoneyValues._1e18BN)
-	}
 	// --- Logging functions ---
 
 	static logGasMetrics(gasResults, message) {
@@ -313,26 +310,6 @@ class TestHelper {
 		return contracts.vesselManager.getTCR(asset, price)
 	}
 
-	// --- Gas compensation calculation functions ---
-
-	// Given a composite debt, returns the actual debt  - i.e. subtracts the virtual debt.
-	// Virtual debt = 50 TRI.
-	static async getActualDebtFromComposite(compositeDebt, contracts, asset) {
-		if (!asset) asset = this.ZERO_ADDRESS
-		const issuedDebt = await contracts.vesselManager.getActualDebtFromComposite(
-			asset,
-			compositeDebt
-		)
-		return issuedDebt
-	}
-
-	// Adds the gas compensation (50 TRI)
-	static async getCompositeDebt(contracts, debt, asset) {
-		if (!asset) asset = this.ZERO_ADDRESS
-		const compositeDebt = contracts.borrowerOperations.getCompositeDebt(asset, debt)
-		return compositeDebt
-	}
-
 	static async getVesselEntireColl(contracts, vessel, asset) {
 		if (!asset) asset = this.ZERO_ADDRESS
 		return this.toBN((await contracts.vesselManager.getEntireDebtAndColl(asset, vessel))[1])
@@ -350,23 +327,19 @@ class TestHelper {
 
 	/*
 	 * given the requested TRI amomunt in openVessel, returns the total debt
-	 * So, it adds the gas compensation and the borrowing fee
 	 */
 	static async getOpenVesselTotalDebt(contracts, TRIAmount, asset) {
 		if (!asset) asset = this.ZERO_ADDRESS
 		const fee = await contracts.vesselManager.getBorrowingFee(asset, TRIAmount)
-		const compositeDebt = await this.getCompositeDebt(contracts, TRIAmount, asset)
-		return compositeDebt.add(fee)
+		return TRIAmount.add(fee)
 	}
 
 	/*
 	 * given the desired total debt, returns the TRI amount that needs to be requested in openVessel
-	 * So, it subtracts the gas compensation and then the borrowing fee
 	 */
 	static async getOpenVesselTRIAmount(contracts, totalDebt, asset) {
 		if (!asset) asset = this.ZERO_ADDRESS
-		const actualDebt = await this.getActualDebtFromComposite(totalDebt, contracts, asset)
-		const netDebt = await this.getNetBorrowingAmount(contracts, actualDebt, asset)
+		const netDebt = await this.getNetBorrowingAmount(contracts, totalDebt, asset)
 		return netDebt
 	}
 
@@ -392,17 +365,6 @@ class TestHelper {
 		return expected.mul(MoneyValues._1e18BN).div(MoneyValues._1e18BN.add(redemptionRate))
 	}
 
-	// Get's total collateral minus total gas comp, for a series of vessels.
-	static async getExpectedTotalCollMinusTotalGasComp(vesselList, contracts) {
-		let totalCollRemainder = web3.utils.toBN("0")
-
-		for (const vessel of vesselList) {
-			const remainingColl = this.getCollMinusGasComp(vessel, contracts)
-			totalCollRemainder = totalCollRemainder.add(remainingColl)
-		}
-		return totalCollRemainder
-	}
-
 	static getEmittedRedemptionValues(redemptionTx) {
 		for (let i = 0; i < redemptionTx.logs.length; i++) {
 			if (redemptionTx.logs[i].event === "Redemption") {
@@ -422,10 +384,8 @@ class TestHelper {
 			if (liquidationTx.logs[i].event === "Liquidation") {
 				const liquidatedDebt = liquidationTx.logs[i].args[1]
 				const liquidatedColl = liquidationTx.logs[i].args[2]
-				const collGasComp = liquidationTx.logs[i].args[3]
-				const TRIGasComp = liquidationTx.logs[i].args[4]
 
-				return [liquidatedDebt, liquidatedColl, collGasComp, TRIGasComp]
+				return [liquidatedDebt, liquidatedColl]
 			}
 		}
 		throw "The transaction logs do not contain a liquidation event"
@@ -437,10 +397,6 @@ class TestHelper {
 
 	static getEmittedLiquidatedColl(liquidationTx) {
 		return this.getLiquidationEventArg(liquidationTx, 1) // LiquidatedColl is position 1 in the Liquidation event
-	}
-
-	static getEmittedGasComp(liquidationTx) {
-		return this.getLiquidationEventArg(liquidationTx, 2) // GasComp is position 2 in the Liquidation event
 	}
 
 	static getLiquidationEventArg(liquidationTx, arg) {
@@ -840,7 +796,6 @@ class TestHelper {
 		} else if (typeof ICR == "string") ICR = this.toBN(ICR)
 
 		const totalDebt = await this.getOpenVesselTotalDebt(contracts, TRIAmount, asset)
-		const netDebt = await this.getActualDebtFromComposite(totalDebt, contracts, asset)
 
 		if (extraParams.value) {
 			assetSent = extraParams.value
@@ -866,7 +821,7 @@ class TestHelper {
 
 		return {
 			TRIAmount,
-			netDebt,
+			netDebt: totalDebt,
 			totalDebt,
 			ICR,
 			collateral: assetSent,

@@ -95,8 +95,6 @@ interface IAdminContract {
 
 	function getCcr(address _collateral) external view returns (uint256);
 
-	function getDebtTokenGasCompensation(address _collateral) external view returns (uint256);
-
 	function getMinNetDebt(address _collateral) external view returns (uint256);
 
 	function getPercentDivisor(address _collateral) external view returns (uint256);

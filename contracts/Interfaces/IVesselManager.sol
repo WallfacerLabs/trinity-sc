@@ -210,7 +210,7 @@ interface IVesselManager is ITrinityBase {
 		uint256 _collToSendToStabilityPool
 	) external;
 
-	function updateSystemSnapshots_excludeCollRemainder(address _asset, uint256 _collRemainder) external;
+	function updateSystemSnapshots_excludeCollRemainder(address _asset) external;
 
 	function movePendingVesselRewardsToActivePool(
 		address _asset,
@@ -219,11 +219,4 @@ interface IVesselManager is ITrinityBase {
 	) external;
 
 	function isVesselActive(address _asset, address _borrower) external view returns (bool);
-
-	function sendGasCompensation(
-		address _asset,
-		address _liquidator,
-		uint256 _debtTokenAmount,
-		uint256 _assetAmount
-	) external;
 }
