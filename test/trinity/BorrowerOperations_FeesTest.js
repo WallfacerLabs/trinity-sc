@@ -10,7 +10,7 @@ const {_1e18BN} = testHelpers.MoneyValues
 
 
 contract("BorrowerOperations_Fees", async accounts => {
-    const [owner, alice, treasury] = accounts
+    const [owner, alice, bob, treasury] = accounts
 
     let contracts
     let snapshotId
@@ -29,12 +29,27 @@ contract("BorrowerOperations_Fees", async accounts => {
         })
     }
 
+    async function closeVessel(account) {
+        const {borrowerOperations, erc20} = contracts.core
+        return borrowerOperations.closeVessel(erc20.address, {
+            from: account,
+        })
+    }
+
+    async function mintDebtTokens(account, amount) {
+        return contracts.core.debtToken.unprotectedMint(account, amount)
+    }
+
     async function skipToNextEpoch() {
         await th.fastForwardTime(SECONDS_IN_ONE_WEEK, web3.currentProvider)
     }
 
     function getDebtWithFee(debt) {
         return debt.add(debt.mul(borrowingFee).div(_1e18BN))
+    }
+
+    function getFee(debt) {
+        return debt.mul(borrowingFee).div(_1e18BN)
     }
 
     function getEpochUpdatedEvent(tx) {
@@ -193,6 +208,58 @@ contract("BorrowerOperations_Fees", async accounts => {
             const currentTimestamp = th.toBN(await th.getLatestBlockTimestamp(web3))
             const expectedTimestamp = currentTimestamp.sub(currentTimestamp.mod(toBN(SECONDS_IN_ONE_WEEK)))
             assert.isTrue(epoch.eq(expectedTimestamp))
+        })
+    })
+
+    describe('closeVessel', () => {
+        it('does not add fees mid epoch', async () => {
+            const {erc20, debtToken, borrowerOperations} = contracts.core
+            await openVessel(alice)
+            await skipToNextEpoch()
+            
+            const debtBeforeFeeCollection = await contracts.core.vesselManager.getVesselDebt(erc20.address, alice)
+            const treasuryBalanceBeforeFeeCollection = await debtToken.balanceOf(treasury)
+            await borrowerOperations.collectVesselFee(erc20.address, alice)
+            
+            const treasuryBalancePostFeeCollection = await debtToken.balanceOf(treasury)
+            const expectedFee = getFee(debtBeforeFeeCollection)
+            assert.equal(treasuryBalancePostFeeCollection.toString(), treasuryBalanceBeforeFeeCollection.add(expectedFee).toString())
+            
+            // bob opens vessel so alice can close hers
+            await openVessel(bob)
+
+            const treasuryBalanceBeforeClose = await debtToken.balanceOf(treasury)
+            await th.fastForwardTime(SECONDS_IN_ONE_WEEK / 2, web3.currentProvider)
+            await mintDebtTokens(alice, vesselTotalDebt)
+            await closeVessel(alice)
+
+            const treasuryBalancePostClose = await debtToken.balanceOf(treasury)
+            assert.equal(treasuryBalancePostClose.toString(), treasuryBalanceBeforeClose.toString())
+        })
+
+        it('skips due fee payment when called before collectVesselFee', async () => {
+            const {erc20, debtToken, borrowerOperations} = contracts.core
+            await openVessel(alice)
+            await skipToNextEpoch()
+            
+            const debtBeforeFeeCollection = await contracts.core.vesselManager.getVesselDebt(erc20.address, alice)
+            const treasuryBalanceBeforeFeeCollection = await debtToken.balanceOf(treasury)
+            await borrowerOperations.collectVesselFee(erc20.address, alice)
+            
+            const treasuryBalancePostFeeCollection = await debtToken.balanceOf(treasury)
+            const expectedFee = getFee(debtBeforeFeeCollection)
+            assert.equal(treasuryBalancePostFeeCollection.toString(), treasuryBalanceBeforeFeeCollection.add(expectedFee).toString())
+            
+            // bob opens vessel so alice can close hers
+            await openVessel(bob)
+
+            const treasuryBalanceBeforeClose = await debtToken.balanceOf(treasury)
+            await skipToNextEpoch()
+            await mintDebtTokens(alice, vesselTotalDebt)
+            await closeVessel(alice)
+
+            const treasuryBalancePostClose = await debtToken.balanceOf(treasury)
+            assert.equal(treasuryBalancePostClose.toString(), treasuryBalanceBeforeClose.toString())
         })
     })
 
