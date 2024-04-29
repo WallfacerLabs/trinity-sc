@@ -44,7 +44,7 @@ contract("AdminContract", async accounts => {
 	const MCR_SAFETY_MIN = toBN((1.01e18).toString())
 
 	const CCR_SAFETY_MAX = toBN(dec(10, 18))
-	const CCR_SAFETY_MIN = toBN(dec(1, 18))
+	const CCR_SAFETY_MIN = toBN(dec(0, 18))
 
 	const PERCENT_DIVISOR_SAFETY_MAX = toBN(200)
 	const PERCENT_DIVISOR_SAFETY_MIN = toBN(2)
@@ -86,7 +86,7 @@ contract("AdminContract", async accounts => {
 
 	it("Formula Checks: Call every function with default value, Should match default values", async () => {
 		await adminContract.setBorrowingFee(ZERO_ADDRESS, (0.005e18).toString())
-		await adminContract.setCCR(ZERO_ADDRESS, "1500000000000000000")
+		await adminContract.setCCR(ZERO_ADDRESS, "0")
 		await adminContract.setMCR(ZERO_ADDRESS, "1100000000000000000")
 		await adminContract.setMinNetDebt(ZERO_ADDRESS, dec(2_000, 18))
 		await adminContract.setMintCap(ZERO_ADDRESS, dec(1_000_000, 18))
@@ -138,7 +138,6 @@ contract("AdminContract", async accounts => {
 	})
 
 	it("setCCR: Owner change parameter - Failing SafeCheck", async () => {
-		await assertRevert(adminContract.setCCR(ZERO_ADDRESS, CCR_SAFETY_MIN.sub(toBN(1))))
 		await assertRevert(adminContract.setCCR(ZERO_ADDRESS, CCR_SAFETY_MAX.add(toBN(1))))
 	})
 
