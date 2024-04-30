@@ -6,9 +6,10 @@ const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
 var contracts
-var validCollateral
 var snapshotId
 var initialSnapshotId
+var validCollateral
+var unsortedCollaterals
 
 const openVessel = async params => th.openVessel(contracts.core, params)
 const deploy = async (treasury, distributor, mintingAccounts) => {
@@ -33,7 +34,7 @@ const deploy = async (treasury, distributor, mintingAccounts) => {
 	longTimelock = contracts.core.longTimelock
 
 	validCollateral = await adminContract.getValidCollateral()
-
+	unsortedCollaterals = validCollateral.slice(0)
 	// getDepositorGains() expects a sorted collateral array
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
 
@@ -1132,8 +1133,9 @@ contract("StabilityPool", async accounts => {
 				// Expect alice to be entitled to 1000/200000 of the liquidated coll
 
 				const aliceExpectedGainERC20 = liquidatedCollERC20.mul(toBN(dec(1000, 18))).div(toBN(dec(200_000, 18)))
-				const idx = validCollateral.indexOf(erc20.address)
-				const aliceGainERC20 = (await stabilityPool.getDepositorGains(alice, validCollateral))[1][idx]
+
+				const aliceDepositorGains = await stabilityPool.getDepositorGains(alice, validCollateral)
+				const aliceGainERC20 = aliceDepositorGains[1][aliceDepositorGains[0].indexOf(erc20.address)]
 				assert.isTrue(aliceExpectedGainERC20.eq(aliceGainERC20))
 
 				// Alice withdraws from SP, chooses not to receive gains to avoid transfer/swap costs
@@ -1150,7 +1152,8 @@ contract("StabilityPool", async accounts => {
 				await stabilityPool.withdrawFromSP(dec(199_000, 18), validCollateral, { from: whale })
 				const stability_col_AfterWhaleERC20 = await stabilityPool.getCollateral(erc20.address)
 				
-				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(idx)).div(toBN(10).pow(toBN(18)))
+				const collateralId = unsortedCollaterals.indexOf(erc20.address)
+				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(collateralId)).div(toBN(10).pow(toBN(18)))
 				assert.closeTo(stability_col_AfterWhaleERC20.sub(aliceExpectedGainERC20), lastAssetError_Offset, toBN(Math.floor(lastAssetError_Offset * 0.001)))
 			})
 
