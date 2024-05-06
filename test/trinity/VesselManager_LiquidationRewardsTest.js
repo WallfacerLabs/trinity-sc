@@ -8,8 +8,8 @@ var contracts
 var snapshotId
 var initialSnapshotId
 
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -28,16 +28,20 @@ const deploy = async (treasury, mintingAccounts) => {
 	vesselManagerOperations = contracts.core.vesselManagerOperations
 	shortTimelock = contracts.core.shortTimelock
 	longTimelock = contracts.core.longTimelock
+
+	for(const account of mintingAccounts) {
+		await adminContract.setLiquidatorWhitelisted(account, true)
+	}
 }
 
 contract("VesselManager - Redistribution reward calculations", async accounts => {
-	const [owner, alice, bob, carol, dennis, erin, freddy, A, B, C, D, E, treasury] = accounts
+	const [owner, alice, bob, carol, dennis, erin, freddy, A, B, C, D, E, treasury, distributor] = accounts
 
 	const getNetBorrowingAmount = async (debtWithFee, asset) => th.getNetBorrowingAmount(contracts.core, debtWithFee, asset)
 	const openVessel = async params => th.openVessel(contracts.core, params)
 
 	before(async () => {
-		await deploy(treasury, accounts.slice(0, 20))
+		await deploy(treasury, distributor, accounts.slice(0, 20))
 		initialSnapshotId = await network.provider.send("evm_snapshot")
 	})
 

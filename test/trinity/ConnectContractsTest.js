@@ -5,8 +5,8 @@ var contracts
 var snapshotId
 var initialSnapshotId
 
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -27,7 +27,7 @@ const deploy = async (treasury, mintingAccounts) => {
 
 contract("Deployment script - Sets correct contract addresses dependencies after deployment", async accounts => {
 	before(async () => {
-		await deploy(accounts[0], [])
+		await deploy(accounts[0],accounts[1], [])
 	})
 
 	// Skipping as the setAddresses() functions were replaced by constants

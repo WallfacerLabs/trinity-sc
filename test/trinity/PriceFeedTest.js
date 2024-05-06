@@ -87,8 +87,8 @@ contract("PriceFeed", async accounts => {
 		setBalance(timelock.address, 1e18)
 
 		// only addresses considered in the tests are timelock and vesselManagerOperations
-		const addresses = new Array(14).fill(timelock.address, 0)
-		addresses[13] = vesselManagerOperations.address
+		const addresses = new Array(15).fill(timelock.address, 0)
+		addresses[14] = vesselManagerOperations.address
 		await priceFeed.setAddresses(addresses)
 		await setOracle(ZERO_ADDRESS, mockOracle.address)
 	})

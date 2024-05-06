@@ -17,8 +17,8 @@ var snapshotId
 var initialSnapshotId
 var validCollateral
 
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -43,8 +43,11 @@ const deploy = async (treasury, mintingAccounts) => {
 	// getDepositorGains() expects a sorted collateral array
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
 
-	for(const account of mintingAccounts) {
-		await adminContract.setAddressCollateralWhitelisted(erc20.address, account, true)
+	for (const account of mintingAccounts) {
+		await adminContract.setLiquidatorWhitelisted(account, true)
+		for (const collateral of validCollateral) {
+			await adminContract.setAddressCollateralWhitelisted(collateral, account, true)
+		}
 	}
 }
 
@@ -88,6 +91,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 		H,
 		I,
 		treasury,
+		distributor,
 	] = accounts
 
 	let REDEMPTION_SOFTENING_PARAM
@@ -104,7 +108,7 @@ contract("VesselManager - in Recovery Mode", async accounts => {
 	}
 
 	before(async () => {
-		await deploy(treasury, accounts.slice(0, 40))
+		await deploy(treasury, distributor, accounts.slice(0, 40))
 		await setBalance(shortTimelock.address, 1e18)
 		await impersonateAccount(shortTimelock.address)
 		await vesselManagerOperations.setRedemptionSofteningParam("9700", { from: shortTimelock.address })

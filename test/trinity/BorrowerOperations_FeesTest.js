@@ -10,7 +10,7 @@ const {_1e18BN} = testHelpers.MoneyValues
 
 
 contract("BorrowerOperations_Fees", async accounts => {
-    const [owner, alice, bob, treasury] = accounts
+    const [_, alice, bob, treasury, distributor] = accounts
 
     let contracts
     let snapshotId
@@ -66,7 +66,7 @@ contract("BorrowerOperations_Fees", async accounts => {
     }
 
     before(async () => {
-        contracts = await deploymentHelper.deployTestContracts(treasury, [])
+        contracts = await deploymentHelper.deployTestContracts(treasury, distributor, [])
 
         for (const acc of accounts.slice(0, 20)) {
             await contracts.core.erc20.mint(acc, await web3.eth.getBalance(acc))
@@ -91,16 +91,16 @@ contract("BorrowerOperations_Fees", async accounts => {
         it('pays initial fee', async () => {
             const {debtToken, erc20} = contracts.core
 
-            const initialTreasuryBalance = await debtToken.balanceOf(treasury)
-            assert.isTrue(initialTreasuryBalance.eq(toBN(0)))
+            const initialDistributorBalance = await debtToken.balanceOf(distributor)
+            assert.isTrue(initialDistributorBalance.eq(toBN(0)))
 
             await openVessel(alice)
 
             const vesselTRIAmount_Asset = await th.getOpenVesselTRIAmount(contracts.core, vesselTotalDebt, erc20.address)
             const expectedFeeAmount = vesselTRIAmount_Asset.mul(borrowingFee).div(_1e18BN).toString()
-            const treasuryBalance = await debtToken.balanceOf(treasury)
+            const distributorBalance = await debtToken.balanceOf(distributor)
 
-            assert.equal(treasuryBalance, expectedFeeAmount)
+            assert.equal(distributorBalance, expectedFeeAmount)
         })
 
         it('updates epoch', async () => {
@@ -218,23 +218,23 @@ contract("BorrowerOperations_Fees", async accounts => {
             await skipToNextEpoch()
             
             const debtBeforeFeeCollection = await contracts.core.vesselManager.getVesselDebt(erc20.address, alice)
-            const treasuryBalanceBeforeFeeCollection = await debtToken.balanceOf(treasury)
+            const distributorBalanceBeforeFeeCollection = await debtToken.balanceOf(distributor)
             await borrowerOperations.collectVesselFee(erc20.address, alice)
             
-            const treasuryBalancePostFeeCollection = await debtToken.balanceOf(treasury)
+            const distributorBalancePostFeeCollection = await debtToken.balanceOf(distributor)
             const expectedFee = getFee(debtBeforeFeeCollection)
-            assert.equal(treasuryBalancePostFeeCollection.toString(), treasuryBalanceBeforeFeeCollection.add(expectedFee).toString())
+            assert.equal(distributorBalancePostFeeCollection.toString(), distributorBalanceBeforeFeeCollection.add(expectedFee).toString())
             
             // bob opens vessel so alice can close hers
             await openVessel(bob)
 
-            const treasuryBalanceBeforeClose = await debtToken.balanceOf(treasury)
+            const distributorBalanceBeforeClose = await debtToken.balanceOf(distributor)
             await th.fastForwardTime(SECONDS_IN_ONE_WEEK / 2, web3.currentProvider)
             await mintDebtTokens(alice, vesselTotalDebt)
             await closeVessel(alice)
 
-            const treasuryBalancePostClose = await debtToken.balanceOf(treasury)
-            assert.equal(treasuryBalancePostClose.toString(), treasuryBalanceBeforeClose.toString())
+            const distributorBalancePostClose = await debtToken.balanceOf(distributor)
+            assert.equal(distributorBalancePostClose.toString(), distributorBalanceBeforeClose.toString())
         })
 
         it('skips due fee payment when called before collectVesselFee', async () => {
@@ -243,23 +243,23 @@ contract("BorrowerOperations_Fees", async accounts => {
             await skipToNextEpoch()
             
             const debtBeforeFeeCollection = await contracts.core.vesselManager.getVesselDebt(erc20.address, alice)
-            const treasuryBalanceBeforeFeeCollection = await debtToken.balanceOf(treasury)
+            const distributorBalanceBeforeFeeCollection = await debtToken.balanceOf(distributor)
             await borrowerOperations.collectVesselFee(erc20.address, alice)
             
-            const treasuryBalancePostFeeCollection = await debtToken.balanceOf(treasury)
+            const distributorBalancePostFeeCollection = await debtToken.balanceOf(distributor)
             const expectedFee = getFee(debtBeforeFeeCollection)
-            assert.equal(treasuryBalancePostFeeCollection.toString(), treasuryBalanceBeforeFeeCollection.add(expectedFee).toString())
+            assert.equal(distributorBalancePostFeeCollection.toString(), distributorBalanceBeforeFeeCollection.add(expectedFee).toString())
             
             // bob opens vessel so alice can close hers
             await openVessel(bob)
 
-            const treasuryBalanceBeforeClose = await debtToken.balanceOf(treasury)
+            const distributorBalanceBeforeClose = await debtToken.balanceOf(distributor)
             await skipToNextEpoch()
             await mintDebtTokens(alice, vesselTotalDebt)
             await closeVessel(alice)
 
-            const treasuryBalancePostClose = await debtToken.balanceOf(treasury)
-            assert.equal(treasuryBalancePostClose.toString(), treasuryBalanceBeforeClose.toString())
+            const distributorBalancePostClose = await debtToken.balanceOf(distributor)
+            assert.equal(distributorBalancePostClose.toString(), distributorBalanceBeforeClose.toString())
         })
     })
 

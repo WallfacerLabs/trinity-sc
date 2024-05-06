@@ -19,9 +19,10 @@ var contracts
 var snapshotId
 var initialSnapshotId
 var validCollateral
+var unsortedCollaterals
 
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -42,12 +43,15 @@ const deploy = async (treasury, mintingAccounts) => {
 	longTimelock = contracts.core.longTimelock
 
 	validCollateral = await adminContract.getValidCollateral()
-
+	unsortedCollaterals = validCollateral.slice(0)
 	// getDepositorGains() expects a sorted collateral array
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
 
-	for(const account of mintingAccounts) {
-		await adminContract.setAddressCollateralWhitelisted(erc20.address, account, true)
+	for (const account of mintingAccounts) {
+		for (const collateral of validCollateral) {
+			await adminContract.setAddressCollateralWhitelisted(collateral, account, true)
+		}
+		await adminContract.setLiquidatorWhitelisted(account, true)
 	}
 }
 
@@ -84,6 +88,7 @@ contract("VesselManager", async accounts => {
 		D,
 		E,
 		treasury,
+		distributor,
 	] = accounts
 
 	const multisig = accounts[999]
@@ -100,7 +105,7 @@ contract("VesselManager", async accounts => {
 
 	describe("Vessel Manager", async () => {
 		before(async () => {
-			await deploy(treasury, accounts.slice(0, 20))
+			await deploy(treasury, distributor, accounts.slice(0, 20))
 
 			// give some gas to the contracts that will be impersonated
 			setBalance(adminContract.address, 1e18)
@@ -130,6 +135,24 @@ contract("VesselManager", async accounts => {
 		})
 
 		describe("Liquidations", async () => {
+			it("liquidate(): reverts when not whitelisted", async () => {
+				await openVessel({
+					asset: erc20.address,
+					ICR: toBN(dec(4, 18)),
+					extraParams: { from: alice },
+				})
+
+				await adminContract.setLiquidatorWhitelisted(alice, false)
+
+				try {
+					const tx = await vesselManagerOperations.liquidate(erc20.address, alice, {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
+
 			it("liquidate(): closes a Vessel that has ICR < MCR", async () => {
 				await openVessel({
 					asset: erc20.address,
@@ -1149,8 +1172,10 @@ contract("VesselManager", async accounts => {
 				// Check Bob' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
 
 				const bob_Deposit_Before_Asset = await stabilityPool.getCompoundedDebtTokenDeposits(bob)
-				const idx = validCollateral.indexOf(erc20.address)
-				const bob_ETHGain_Before_Asset = (await stabilityPool.getDepositorGains(bob, validCollateral))[1][idx]
+
+
+				const bob_depositor_gains = (await stabilityPool.getDepositorGains(bob, validCollateral))
+				const bob_ETHGain_Before_Asset = bob_depositor_gains[1][bob_depositor_gains[0].indexOf(erc20.address)]
 
 				assert.isAtMost(th.getDifference(bob_Deposit_Before_Asset, B_spDeposit.sub(C_debt_Asset)), 1000000)
 				assert.isAtMost(th.getDifference(bob_ETHGain_Before_Asset, C_collateral_Asset), 1000)
@@ -1179,13 +1204,13 @@ contract("VesselManager", async accounts => {
 
      Check Bob' SP deposit has been reduced to 50 TRI, and his ETH gain has increased to 1.5 ETH. */
 				const alice_Deposit_After_Asset = (await stabilityPool.getCompoundedDebtTokenDeposits(alice)).toString()
-				const alice_ETHGain_After_Asset = (await stabilityPool.getDepositorGains(alice, validCollateral))[1][
-					idx
-				].toString()
+				const alice_depositor_gains = (await stabilityPool.getDepositorGains(alice, validCollateral))			
+				const alice_ETHGain_After_Asset = alice_depositor_gains[1][alice_depositor_gains[0].indexOf(erc20.address)].toString()
 
 				const totalDeposits_Asset = bob_Deposit_Before_Asset.add(A_spDeposit)
 
-				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(idx)).div(toBN(10).pow(toBN(18)))
+				const collateral_Id = unsortedCollaterals.indexOf(erc20.address)
+				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(collateral_Id)).div(toBN(10).pow(toBN(18)))
 				const lastDebtTokenLossError_Offset = (await stabilityPool.lastDebtTokenLossError_Offset()).div(toBN(10).pow(toBN(18)))
 
 				assert.isAtMost(
@@ -1204,7 +1229,10 @@ contract("VesselManager", async accounts => {
 				)
 
 				const bob_Deposit_After_Asset = await stabilityPool.getCompoundedDebtTokenDeposits(bob)
-				const bob_ETHGain_After_Asset = (await stabilityPool.getDepositorGains(bob, validCollateral))[1][idx]
+
+				const bob_depositor_gains_After_Asset = (await stabilityPool.getDepositorGains(bob, validCollateral))
+				const bob_ETHGain_After_Asset = bob_depositor_gains_After_Asset[1][bob_depositor_gains_After_Asset[0].indexOf(erc20.address)]
+
 
 				assert.isAtMost(
 					th.getDifference(
@@ -1398,6 +1426,17 @@ contract("VesselManager", async accounts => {
 			})
 
 			// --- liquidateVessels() ---
+			it("liquidateVessels(): reverts when not whitelisted", async () => {
+				await adminContract.setLiquidatorWhitelisted(alice, false)
+
+				try {
+					const tx = await vesselManagerOperations.liquidateVessels(erc20.address, 2, {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
 
 			it("liquidateVessels(): liquidates a Vessel that a) was skipped in a previous liquidation and b) has pending rewards", async () => {
 				// A, B, C, D, E open vessels
@@ -2429,6 +2468,18 @@ contract("VesselManager", async accounts => {
 		// --- batchLiquidateVessels() ---
 
 		describe("Batch Liquidations", async () => {
+			it("batchLiquidateVessels(): reverts when not whitelisted", async () => {
+				await adminContract.setLiquidatorWhitelisted(alice, false)
+
+				try {
+					const tx = await vesselManagerOperations.batchLiquidateVessels(erc20.address, [], {from: alice})
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, "VesselManagerOperations__LiquidatorNotWhitelisted()")
+				}
+			})
+
 			it("batchLiquidateVessels(): liquidates a Vessel that a) was skipped in a previous liquidation and b) has pending rewards", async () => {
 				// A, B, C, D, E open vessels
 

@@ -11,8 +11,8 @@ var initialSnapshotId
 var validCollateral
 
 const openVessel = async params => th.openVessel(contracts.core, params)
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -32,10 +32,17 @@ const deploy = async (treasury, mintingAccounts) => {
 	longTimelock = contracts.core.longTimelock
 
 	validCollateral = await adminContract.getValidCollateral()
+
+	for (const account of mintingAccounts) {
+		await adminContract.setLiquidatorWhitelisted(account, true)
+		for (const collateral of validCollateral) {
+			await adminContract.setAddressCollateralWhitelisted(collateral, account, true)
+		}
+	}
 }
 
 contract("Gas compensation tests", async accounts => {
-	const [liquidator, alice, bob, carol, dennis, erin, flyn, harriet, whale, treasury] = accounts
+	const [liquidator, alice, bob, carol, dennis, erin, flyn, harriet, whale, treasury, distributor] = accounts
 
 	const logICRs = ICRList => {
 		for (let i = 0; i < ICRList.length; i++) {
@@ -44,7 +51,7 @@ contract("Gas compensation tests", async accounts => {
 	}
 
 	before(async () => {
-		await deploy(treasury, accounts.slice(0, 25))
+		await deploy(treasury, distributor, accounts.slice(0, 25))
 		initialSnapshotId = await network.provider.send("evm_snapshot")
 	})
 

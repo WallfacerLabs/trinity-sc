@@ -9,11 +9,11 @@ var snapshotId
 var initialSnapshotId
 
 contract("DebtToken", async accounts => {
-	const [owner, alice, bob, carol, dennis, treasury] = accounts
+	const [owner, alice, bob, carol, dennis, treasury, distributor] = accounts
 	let debtToken, stabilityPool
 
 	before(async () => {
-		const contracts = await deploymentHelper.deployTestContracts(treasury, [])
+		const contracts = await deploymentHelper.deployTestContracts(treasury, distributor, [])
 		debtToken = contracts.core.debtToken
 		stabilityPool = contracts.core.stabilityPool
 

@@ -9,6 +9,7 @@ abstract contract AddressesMainnet {
 	address public constant collSurplusPool = 0x09dfdF392a56E4316e97A13e20b09C415fCD3d7b;
 	address public constant debtToken = 0x15f74458aE0bFdAA1a96CA1aa779D715Cc1Eefe4;
 	address public constant defaultPool = 0x84446698694B348EaeCE187b55df06AB4Ce72b35;
+	address public constant distributorAddress = 0x6F8Fe995422c5efE6487A7B07f67E84aaD9D4eC8;
 	address public constant gasPoolAddress = 0x40E0e274A42D9b1a9D4B64dC6c46D21228d45C20;
 	address public constant priceFeed = 0x89F1ecCF2644902344db02788A790551Bb070351;
 	address public constant sortedVessels = 0xF31D88232F36098096d1eB69f0de48B53a1d18Ce;

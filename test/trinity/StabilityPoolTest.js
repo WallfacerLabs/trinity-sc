@@ -6,13 +6,14 @@ const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
 var contracts
-var validCollateral
 var snapshotId
 var initialSnapshotId
+var validCollateral
+var unsortedCollaterals
 
 const openVessel = async params => th.openVessel(contracts.core, params)
-const deploy = async (treasury, mintingAccounts) => {
-	contracts = await deploymentHelper.deployTestContracts(treasury, mintingAccounts)
+const deploy = async (treasury, distributor, mintingAccounts) => {
+	contracts = await deploymentHelper.deployTestContracts(treasury, distributor, mintingAccounts)
 
 	activePool = contracts.core.activePool
 	adminContract = contracts.core.adminContract
@@ -33,9 +34,16 @@ const deploy = async (treasury, mintingAccounts) => {
 	longTimelock = contracts.core.longTimelock
 
 	validCollateral = await adminContract.getValidCollateral()
-
+	unsortedCollaterals = validCollateral.slice(0)
 	// getDepositorGains() expects a sorted collateral array
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
+
+	for (const account of mintingAccounts) {
+		await adminContract.setLiquidatorWhitelisted(account, true)
+		for (const collateral of validCollateral) {
+			await adminContract.setAddressCollateralWhitelisted(collateral, account, true)
+		}
+	}
 }
 
 contract("StabilityPool", async accounts => {
@@ -56,6 +64,7 @@ contract("StabilityPool", async accounts => {
 		flyn,
 		graham,
 		treasury,
+		distributor,
 	] = accounts
 
 	const getOpenVesselTRIAmount = async (totalDebt, asset) =>
@@ -102,7 +111,7 @@ contract("StabilityPool", async accounts => {
 
 	describe("Stability Pool Mechanisms", async () => {
 		before(async () => {
-			await deploy(treasury, accounts.slice(0, 20))
+			await deploy(treasury, distributor, accounts.slice(0, 20))
 			initialSnapshotId = await network.provider.send("evm_snapshot")
 		})
 
@@ -119,6 +128,16 @@ contract("StabilityPool", async accounts => {
 		})
 
 		describe("Providing", async () => {
+			it("provideToSp(): reverts if not whitelisted", async () => {
+				try {
+					await stabilityPool.provideToSP(200, [alice], { from: alice })
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, `StabilityPool__AddressNotCollateralWhitelisted("${alice}")`)
+				}
+			})
+
 			it("provideToSP(): increases the Stability Pool balance", async () => {
 				await _openVessel(erc20, (extraDebtTokenAmt = 200), alice)
 				await stabilityPool.provideToSP(200, validCollateral, { from: alice })
@@ -734,6 +753,8 @@ contract("StabilityPool", async accounts => {
 			it("provideToSP(): passing wrong address to asset list has no impact", async () => {
 				await openWhaleVessel(erc20, (icr = 10), (extraDebtTokenAmt = 1_000_000))
 				// first call won't revert as there is no initial deposit
+				await adminContract.setAddressCollateralWhitelisted(alice, whale, true)
+
 				await stabilityPool.provideToSP(dec(199_000, 18), [alice], { from: whale })
 				await stabilityPool.provideToSP(dec(1_000, 18), [alice], { from: whale })
 				await stabilityPool.withdrawFromSP(dec(1_000, 18), [alice], { from: whale })
@@ -761,6 +782,16 @@ contract("StabilityPool", async accounts => {
 		})
 
 		describe("Withdrawing", async () => {
+			it("withdrawFromSP(): reverts if not whitelisted", async () => {
+				try {
+					await stabilityPool.withdrawFromSP(200, [alice], { from: alice })
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, `StabilityPool__AddressNotCollateralWhitelisted("${alice}")`)
+				}
+			})
+
 			it("withdrawFromSP(): reverts when user has no active deposit", async () => {
 				await _openVessel(erc20, 100, alice)
 				await _openVessel(erc20, 100, bob)
@@ -1127,8 +1158,9 @@ contract("StabilityPool", async accounts => {
 				// Expect alice to be entitled to 1000/200000 of the liquidated coll
 
 				const aliceExpectedGainERC20 = liquidatedCollERC20.mul(toBN(dec(1000, 18))).div(toBN(dec(200_000, 18)))
-				const idx = validCollateral.indexOf(erc20.address)
-				const aliceGainERC20 = (await stabilityPool.getDepositorGains(alice, validCollateral))[1][idx]
+
+				const aliceDepositorGains = await stabilityPool.getDepositorGains(alice, validCollateral)
+				const aliceGainERC20 = aliceDepositorGains[1][aliceDepositorGains[0].indexOf(erc20.address)]
 				assert.isTrue(aliceExpectedGainERC20.eq(aliceGainERC20))
 
 				// Alice withdraws from SP, chooses not to receive gains to avoid transfer/swap costs
@@ -1145,7 +1177,8 @@ contract("StabilityPool", async accounts => {
 				await stabilityPool.withdrawFromSP(dec(199_000, 18), validCollateral, { from: whale })
 				const stability_col_AfterWhaleERC20 = await stabilityPool.getCollateral(erc20.address)
 				
-				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(idx)).div(toBN(10).pow(toBN(18)))
+				const collateralId = unsortedCollaterals.indexOf(erc20.address)
+				const lastAssetError_Offset= (await stabilityPool.lastAssetError_Offset(collateralId)).div(toBN(10).pow(toBN(18)))
 				assert.closeTo(stability_col_AfterWhaleERC20.sub(aliceExpectedGainERC20), lastAssetError_Offset, toBN(Math.floor(lastAssetError_Offset * 0.001)))
 			})
 
