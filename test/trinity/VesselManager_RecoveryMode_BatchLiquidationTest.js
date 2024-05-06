@@ -40,8 +40,11 @@ const deploy = async (treasury, distributor, mintingAccounts) => {
 	// getDepositorGains() expects a sorted collateral array
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
 
-	for(const account of mintingAccounts) {
+	for (const account of mintingAccounts) {
 		await adminContract.setLiquidatorWhitelisted(account, true)
+		for (const collateral of validCollateral) {
+			await adminContract.setAddressCollateralWhitelisted(collateral, account, true)
+		}
 	}
 }
 

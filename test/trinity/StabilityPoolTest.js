@@ -38,8 +38,11 @@ const deploy = async (treasury, distributor, mintingAccounts) => {
 	// getDepositorGains() expects a sorted collateral array
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
 
-	for(const account of mintingAccounts) {
+	for (const account of mintingAccounts) {
 		await adminContract.setLiquidatorWhitelisted(account, true)
+		for (const collateral of validCollateral) {
+			await adminContract.setAddressCollateralWhitelisted(collateral, account, true)
+		}
 	}
 }
 
@@ -125,6 +128,16 @@ contract("StabilityPool", async accounts => {
 		})
 
 		describe("Providing", async () => {
+			it("provideToSp(): reverts if not whitelisted", async () => {
+				try {
+					await stabilityPool.provideToSP(200, [alice], { from: alice })
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, `StabilityPool__AddressNotCollateralWhitelisted("${alice}")`)
+				}
+			})
+
 			it("provideToSP(): increases the Stability Pool balance", async () => {
 				await _openVessel(erc20, (extraDebtTokenAmt = 200), alice)
 				await stabilityPool.provideToSP(200, validCollateral, { from: alice })
@@ -740,6 +753,8 @@ contract("StabilityPool", async accounts => {
 			it("provideToSP(): passing wrong address to asset list has no impact", async () => {
 				await openWhaleVessel(erc20, (icr = 10), (extraDebtTokenAmt = 1_000_000))
 				// first call won't revert as there is no initial deposit
+				await adminContract.setAddressCollateralWhitelisted(alice, whale, true)
+
 				await stabilityPool.provideToSP(dec(199_000, 18), [alice], { from: whale })
 				await stabilityPool.provideToSP(dec(1_000, 18), [alice], { from: whale })
 				await stabilityPool.withdrawFromSP(dec(1_000, 18), [alice], { from: whale })
@@ -767,6 +782,16 @@ contract("StabilityPool", async accounts => {
 		})
 
 		describe("Withdrawing", async () => {
+			it("withdrawFromSP(): reverts if not whitelisted", async () => {
+				try {
+					await stabilityPool.withdrawFromSP(200, [alice], { from: alice })
+					assert.isFalse(tx.receipt.status)
+				} catch (err) {
+					assert.include(err.message, "revert")
+					assert.include(err.message, `StabilityPool__AddressNotCollateralWhitelisted("${alice}")`)
+				}
+			})
+
 			it("withdrawFromSP(): reverts when user has no active deposit", async () => {
 				await _openVessel(erc20, 100, alice)
 				await _openVessel(erc20, 100, bob)

@@ -255,6 +255,11 @@ contract StabilityPool is ReentrancyGuardUpgradeable, UUPSUpgradeable, TrinityBa
 	 * Skipping a collateral forfeits the available rewards (can be useful for gas optimizations)
 	 */
 	function provideToSP(uint256 _amount, address[] calldata _assets) external override nonReentrant {
+		for(uint256 i = 0; i < _assets.length; i++) {
+			if(!IAdminContract(adminContract).getIsAddressCollateralWhitelisted(_assets[i], msg.sender)) {
+				revert StabilityPool__AddressNotCollateralWhitelisted(_assets[i]);
+			}
+		}
 		_requireNonZeroAmount(_amount);
 
 		uint256 initialDeposit = deposits[msg.sender];
@@ -281,6 +286,11 @@ contract StabilityPool is ReentrancyGuardUpgradeable, UUPSUpgradeable, TrinityBa
 	*/
 
 	function withdrawFromSP(uint256 _amount, address[] calldata _assets) external {
+		for(uint256 i = 0; i < _assets.length; i++) {
+			if(!IAdminContract(adminContract).getIsAddressCollateralWhitelisted(_assets[i], msg.sender)) {
+				revert StabilityPool__AddressNotCollateralWhitelisted(_assets[i]);
+			}
+		}
 		(address[] memory assets, uint256[] memory amounts) = _withdrawFromSP(_amount, _assets);
 		_sendGainsToDepositor(msg.sender, assets, amounts);
 	}
