@@ -352,7 +352,6 @@ contract("BorrowerOperations_Fees", async accounts => {
             const {activePool, borrowerOperations, vesselManager, erc20} = contracts.core
             await openVessel(alice)
     
-    
             const initialAliceDebt = await vesselManager.getVesselDebt(erc20.address, alice)
             const initialTotalDebt = await activePool.getDebtTokenBalance(erc20.address)
     
@@ -362,9 +361,32 @@ contract("BorrowerOperations_Fees", async accounts => {
             const newAliceDebt = await vesselManager.getVesselDebt(erc20.address, alice)
             const newGlobalDebt = await activePool.getDebtTokenBalance(erc20.address)
     
-    
             assert.equal(newAliceDebt.toString(), getDebtWithFee(initialAliceDebt).toString())
             assert.equal(newGlobalDebt.toString(), getDebtWithFee(initialTotalDebt).toString())
+        })
+
+        it('can close vessel if vesselDebt > activePoolDebt', async () => {
+            const {activePool, borrowerOperations, vesselManager, debtToken, erc20} = contracts.core
+            await openVessel(alice)
+            await debtToken.unprotectedMint(alice, vesselTotalDebt)
+
+            const activePoolInitialDebt = await activePool.getDebtTokenBalance(erc20.address)
+    
+            await skipToNextEpoch()
+    
+            await borrowerOperations.collectVesselFee(erc20.address, alice)
+
+            const vesselDebt = await vesselManager.getVesselDebt(erc20.address, alice)
+            const activePoolDebt = await activePool.getDebtTokenBalance(erc20.address)
+
+            assert.isTrue(vesselDebt.gt(activePoolInitialDebt))
+            assert.equal(vesselDebt.toString(), activePoolDebt.toString())
+            assert.isTrue(await vesselManager.isVesselActive(erc20.address, alice))
+    
+            await openVessel(bob)
+            await closeVessel(alice)
+
+            assert.isFalse(await vesselManager.isVesselActive(erc20.address, alice))
         })
     })
 })
