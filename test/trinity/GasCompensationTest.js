@@ -32,6 +32,10 @@ const deploy = async (treasury, distributor, mintingAccounts) => {
 	longTimelock = contracts.core.longTimelock
 
 	validCollateral = await adminContract.getValidCollateral()
+
+	for(const account of mintingAccounts) {
+		await adminContract.setLiquidatorWhitelisted(account, true)
+	}
 }
 
 contract("Gas compensation tests", async accounts => {

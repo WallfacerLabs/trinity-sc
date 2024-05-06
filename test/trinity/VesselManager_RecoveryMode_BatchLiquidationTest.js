@@ -39,6 +39,10 @@ const deploy = async (treasury, distributor, mintingAccounts) => {
 
 	// getDepositorGains() expects a sorted collateral array
 	validCollateral = validCollateral.slice(0).sort((a, b) => toBN(a.toLowerCase()).sub(toBN(b.toLowerCase())))
+
+	for(const account of mintingAccounts) {
+		await adminContract.setLiquidatorWhitelisted(account, true)
+	}
 }
 
 contract("VesselManager - in Recovery Mode - back to normal mode in 1 tx", async accounts => {

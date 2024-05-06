@@ -45,6 +45,7 @@ const deploy = async (treasury, distributor, mintingAccounts) => {
 
 	for(const account of mintingAccounts) {
 		await adminContract.setAddressCollateralWhitelisted(erc20.address, account, true)
+		await adminContract.setLiquidatorWhitelisted(account, true)
 	}
 }
 

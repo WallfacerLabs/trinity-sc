@@ -45,6 +45,7 @@ interface IAdminContract {
 	event RedemptionBlockTimestampChanged(address _collateral, uint256 _blockTimestamp);
 	event AddressCollateralWhitelisted(address _collateral, address _address, bool _whitelisted);
 	event BaseFeeEnabledChanged(address _collateral, bool _enabled);
+	event LiquidatorWhitelisted(address _liquidator, bool _whitelisted);
 
 	// Functions --------------------------------------------------------------------------------------------------------
 
@@ -83,6 +84,8 @@ interface IAdminContract {
 
 	function setAddressCollateralWhitelisted(address _collateral, address _address, bool _whitelisted) external;
 
+	function setLiquidatorWhitelisted(address _liquidator, bool _whitelisted) external;
+
 	function setRedemptionBaseFeeEnabled(address _collateral, bool _enabled) external;
 
 	function getIndex(address _collateral) external view returns (uint256);
@@ -110,6 +113,8 @@ interface IAdminContract {
 	function getTotalAssetDebt(address _asset) external view returns (uint256);
 
 	function getIsAddressCollateralWhitelisted(address _collateral, address _address) external view returns (bool);
+
+	function getIsLiquidatorWhitelisted(address _liquidator) external view returns (bool);
 
 	function getRedemptionBaseFeeEnabled(address _collateral) external view returns (bool);
 }

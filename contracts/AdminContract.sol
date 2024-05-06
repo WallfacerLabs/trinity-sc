@@ -40,6 +40,8 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 
 	mapping(address => mapping(address => bool)) internal collateralWhitelistedAddresses;
 
+	mapping(address => bool) internal whitelistedLiquidators;
+
 	// list of all collateral types in collateralParams (active and deprecated)
 	// Addresses for easy access
 	address[] public validCollateral; // index maps to token address.
@@ -257,6 +259,11 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		emit AddressCollateralWhitelisted(_collateral, _address, _whitelisted);
 	}
 
+	function setLiquidatorWhitelisted(address _liquidator, bool _whitelisted) external onlyTimelock {
+		whitelistedLiquidators[_liquidator] = _whitelisted;
+		emit LiquidatorWhitelisted(_liquidator, _whitelisted);
+	}
+
 	function setRedemptionBaseFeeEnabled(address _collateral, bool _enabled) external onlyTimelock {
 		collateralParams[_collateral].redemptionBaseFeeEnabled = _enabled;
 		emit BaseFeeEnabledChanged(_collateral, _enabled);
@@ -331,6 +338,10 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 
 	function getIsAddressCollateralWhitelisted(address _collateral, address _address) external view returns (bool) {
 		return collateralWhitelistedAddresses[_collateral][_address];
+	}
+
+	function getIsLiquidatorWhitelisted(address _liquidator) external view returns (bool) {
+		return whitelistedLiquidators[_liquidator];
 	}
 
 	function getRedemptionBaseFeeEnabled(address _collateral) external view override returns (bool) {

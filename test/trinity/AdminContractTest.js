@@ -320,6 +320,18 @@ contract("AdminContract", async accounts => {
 		await assertRevert(adminContract.setAddressCollateralWhitelisted(erc20.address, ZERO_ADDRESS, false, {from: user}))
 	})
 
+	it('setLiquidatorWhitelisted: Owner change parameter - Valid Owner', async () => {
+		await adminContract.setLiquidatorWhitelisted(ZERO_ADDRESS, true)
+		assert.isTrue(await adminContract.getIsLiquidatorWhitelisted(ZERO_ADDRESS))
+		await adminContract.setLiquidatorWhitelisted(ZERO_ADDRESS, false)
+		assert.isFalse(await adminContract.getIsLiquidatorWhitelisted(ZERO_ADDRESS))
+	})
+
+	it('setLiquidatorWhitelisted: Owner change parameter - Invalid Owner', async () => {
+		await assertRevert(adminContract.setLiquidatorWhitelisted(ZERO_ADDRESS, true, {from: user}))
+		await assertRevert(adminContract.setLiquidatorWhitelisted(ZERO_ADDRESS, false, {from: user}))
+	})
+
 	it('setRedemptionBaseFeeEnabled: Owner change parameter - Valid Owner', async () => {
 		await adminContract.setRedemptionBaseFeeEnabled(ZERO_ADDRESS, true)
 		assert.isTrue(await adminContract.getRedemptionBaseFeeEnabled(ZERO_ADDRESS))
