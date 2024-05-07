@@ -321,7 +321,8 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 	}
 
 	function collectVesselFee(address _asset, address _borrower) external {
-		_collectVesselFee(_asset, _borrower);
+		uint256 collectedFee = _collectVesselFee(_asset, _borrower);
+		IActivePool(activePool).increaseDebt(_asset, collectedFee);
 	}
 
 	/**
@@ -343,9 +344,9 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 	function _collectVesselFee(
 		address _asset,
 		address _borrower
-	) internal {
+	) internal returns (uint256) {
 		if(_vesselAlreadyCollected(_asset, _borrower)) {
-			return;
+			return 0;
 		}
 
 		IVesselManager(vesselManager).applyPendingRewards(_asset, _borrower);
@@ -353,6 +354,7 @@ contract BorrowerOperations is TrinityBase, ReentrancyGuardUpgradeable, UUPSUpgr
 
 		uint256 debtTokenFee = _triggerBorrowingFee(_asset, _borrower, debt);
 		IVesselManager(vesselManager).increaseVesselDebt(_asset, _borrower, debtTokenFee);
+		return debtTokenFee;
 	}
 
 	function _getCurrentEpoch() internal view returns (uint256) {
