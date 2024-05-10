@@ -322,7 +322,6 @@ export class CoreDeployer {
 			console.log(`[${coll.name}] NOTICE: collateral params have already been set`)
 		} else {
 			console.log(`[${coll.name}] Setting collateral params...`)
-			const defaultPercentDivisor = await this.coreContracts.adminContract.PERCENT_DIVISOR_DEFAULT()
 			const defaultBorrowingFee = await this.coreContracts.adminContract.BORROWING_FEE_DEFAULT()
 			const defaultRedemptionFeeFloor = await this.coreContracts.adminContract.REDEMPTION_FEE_FLOOR_DEFAULT()
 			await this.sendAndWaitForTransaction(
@@ -333,7 +332,6 @@ export class CoreDeployer {
 					coll.MCR,
 					coll.minNetDebt,
 					coll.mintCap,
-					defaultPercentDivisor,
 					defaultRedemptionFeeFloor
 				)
 			)

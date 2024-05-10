@@ -13,7 +13,7 @@ const TARGET_ADDRESS = "0xf7Cc67326F9A1D057c1e4b110eF6c680B13a1f53" // Mainnet::
 // const METHOD_ARG_TYPES = ["address","uint256","uint256"]
 // const METHOD_ARG_VALUES = ["0xA35b1B31Ce002FBF2058D22F30f95D405200A15b","200000000000000000000",18]
 
-const METHOD_SIGNATURE = "setCollateralParameters(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)"
+const METHOD_SIGNATURE = "setCollateralParameters(address,uint256,uint256,uint256,uint256,uint256,uint256)"
 const METHOD_ARG_TYPES = ["address", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "uint256"]
 const METHOD_ARG_VALUES = [
 	"0xA35b1B31Ce002FBF2058D22F30f95D405200A15b",
