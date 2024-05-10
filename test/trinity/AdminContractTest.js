@@ -85,7 +85,7 @@ contract("AdminContract", async accounts => {
 	})
 
 	it("Formula Checks: Call every function with default value, Should match default values", async () => {
-		await adminContract.setBorrowingFee(ZERO_ADDRESS, (0.005e18).toString())
+		await adminContract.setBorrowingFee(ZERO_ADDRESS, "383561643835616")
 		await adminContract.setCCR(ZERO_ADDRESS, "0")
 		await adminContract.setMCR(ZERO_ADDRESS, "1052631578950000000")
 		await adminContract.setMinNetDebt(ZERO_ADDRESS, dec(2_000, 18))
