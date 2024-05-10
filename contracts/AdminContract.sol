@@ -25,7 +25,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 	uint256 public constant MCR_DEFAULT = 1.1 ether; // 110%
 	uint256 public constant MIN_NET_DEBT_DEFAULT = 2_000 ether;
 	uint256 public constant MINT_CAP_DEFAULT = 1_000_000 ether; // 1 million TRI
-	uint256 public constant PERCENT_DIVISOR_DEFAULT = 200; // dividing by 200 yields 0.5%
 	uint256 public constant REDEMPTION_FEE_FLOOR_DEFAULT = 0; // 0%
 	uint256 public constant REDEMPTION_BLOCK_TIMESTAMP_DEFAULT = type(uint256).max; // never
 	bool public constant REDEMPTION_BASE_FEE_ENABLED_DEFAULT = false;
@@ -121,7 +120,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 			debtTokenGasCompensation: _debtTokenGasCompensation,
 			minNetDebt: MIN_NET_DEBT_DEFAULT,
 			mintCap: MINT_CAP_DEFAULT,
-			percentDivisor: PERCENT_DIVISOR_DEFAULT,
 			redemptionFeeFloor: REDEMPTION_FEE_FLOOR_DEFAULT,
 			redemptionBlockTimestamp: REDEMPTION_BLOCK_TIMESTAMP_DEFAULT,
 			redemptionBaseFeeEnabled: REDEMPTION_BASE_FEE_ENABLED_DEFAULT
@@ -140,7 +138,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		uint256 mcr,
 		uint256 minNetDebt,
 		uint256 mintCap,
-		uint256 percentDivisor,
 		uint256 redemptionFeeFloor
 	) public override onlyTimelock {
 		collateralParams[_collateral].active = true;
@@ -149,7 +146,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		setMCR(_collateral, mcr);
 		setMinNetDebt(_collateral, minNetDebt);
 		setMintCap(_collateral, mintCap);
-		setPercentDivisor(_collateral, percentDivisor);
 		setRedemptionFeeFloor(_collateral, redemptionFeeFloor);
 	}
 
@@ -218,16 +214,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		uint256 oldMintCap = collParams.mintCap;
 		collParams.mintCap = mintCap;
 		emit MintCapChanged(oldMintCap, mintCap);
-	}
-
-	function setPercentDivisor(
-		address _collateral,
-		uint256 percentDivisor
-	) public override onlyTimelock safeCheck("Percent Divisor", _collateral, percentDivisor, 2, 200) {
-		CollateralParams storage collParams = collateralParams[_collateral];
-		uint256 oldPercent = collParams.percentDivisor;
-		collParams.percentDivisor = percentDivisor;
-		emit PercentDivisorChanged(oldPercent, percentDivisor);
 	}
 
 	function setRedemptionFeeFloor(
@@ -310,10 +296,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 
 	function getMinNetDebt(address _collateral) external view override returns (uint256) {
 		return collateralParams[_collateral].minNetDebt;
-	}
-
-	function getPercentDivisor(address _collateral) external view override returns (uint256) {
-		return collateralParams[_collateral].percentDivisor;
 	}
 
 	function getBorrowingFee(address _collateral) external view override returns (uint256) {

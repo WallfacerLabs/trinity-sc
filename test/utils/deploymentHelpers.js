@@ -169,7 +169,6 @@ class DeploymentHelper {
 			(1.1e18).toString(), // mcr
 			dec(300, 18), // minNetDebt
 			dec(1_000_000, 18), // mintCap
-			100, // percentDivisor
 			defaultFee // redemptionFeeFloor
 		)
 		await core.adminContract.setCollateralParameters(
@@ -179,7 +178,6 @@ class DeploymentHelper {
 			(1.1e18).toString(), // mcr
 			dec(1_800, 18), // minNetDebt
 			dec(10_000_000_000, 18), // mintCap
-			200, // percentDivisor
 			defaultFee // redemptionFeeFloor
 		)
 		await core.adminContract.setCollateralParameters(
@@ -189,7 +187,6 @@ class DeploymentHelper {
 			(1.1e18).toString(), // mcr
 			dec(1_800, 18), // minNetDebt
 			dec(10_000_000_000, 18), // mintCap
-			200, // percentDivisor
 			defaultFee // redemptionFeeFloor
 		)
 	}
