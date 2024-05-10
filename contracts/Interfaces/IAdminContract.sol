@@ -19,7 +19,6 @@ interface IAdminContract {
 		uint256 debtTokenGasCompensation; // Amount of debtToken to be locked in gas pool on opening vessels
 		uint256 minNetDebt; // Minimum amount of net debtToken a vessel must have
 		uint256 mintCap;
-		uint256 percentDivisor;
 		uint256 redemptionFeeFloor;
 		uint256 redemptionBlockTimestamp;
 		bool redemptionBaseFeeEnabled;
@@ -38,7 +37,6 @@ interface IAdminContract {
 	event MCRChanged(uint256 oldMCR, uint256 newMCR);
 	event CCRChanged(uint256 oldCCR, uint256 newCCR);
 	event MinNetDebtChanged(uint256 oldMinNet, uint256 newMinNet);
-	event PercentDivisorChanged(uint256 oldPercentDiv, uint256 newPercentDiv);
 	event BorrowingFeeChanged(uint256 oldBorrowingFee, uint256 newBorrowingFee);
 	event RedemptionFeeFloorChanged(uint256 oldRedemptionFeeFloor, uint256 newRedemptionFeeFloor);
 	event MintCapChanged(uint256 oldMintCap, uint256 newMintCap);
@@ -62,7 +60,6 @@ interface IAdminContract {
 		uint256 mcr,
 		uint256 minNetDebt,
 		uint256 mintCap,
-		uint256 percentDivisor,
 		uint256 redemptionFeeFloor
 	) external;
 
@@ -71,8 +68,6 @@ interface IAdminContract {
 	function setCCR(address _collateral, uint256 newCCR) external;
 
 	function setMinNetDebt(address _collateral, uint256 minNetDebt) external;
-
-	function setPercentDivisor(address _collateral, uint256 precentDivisor) external;
 
 	function setBorrowingFee(address _collateral, uint256 borrowingFee) external;
 
@@ -99,8 +94,6 @@ interface IAdminContract {
 	function getCcr(address _collateral) external view returns (uint256);
 
 	function getMinNetDebt(address _collateral) external view returns (uint256);
-
-	function getPercentDivisor(address _collateral) external view returns (uint256);
 
 	function getBorrowingFee(address _collateral) external view returns (uint256);
 
