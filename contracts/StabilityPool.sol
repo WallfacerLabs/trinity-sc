@@ -122,19 +122,6 @@ import "./Interfaces/IVesselManager.sol";
  * Please see the implementation spec in the proof document, which closely follows on from the compounded deposit / Collateral amount gain derivations:
  * https://github.com/liquity/liquity/blob/master/papers/Scalable_Reward_Distribution_with_Compounding_Stakes.pdf
  *
- *
- * --- Trinity ISSUANCE TO STABILITY POOL DEPOSITORS ---
- *
- * An Trinity issuance event occurs at every deposit operation, and every liquidation.
- *
- * All deposits earn a share of the issued Trinity in proportion to the deposit as a share of total deposits.
- *
- * Please see the system Readme for an overview:
- * https://github.com/liquity/dev/blob/main/README.md#lqty-issuance-to-stability-providers
- *
- * We use the same mathematical product-sum approach to track Trinity gains for depositors, where 'G' is the sum corresponding to Trinity gains.
- * The product P (and snapshot P_t) is re-used, as the ratio P/P_t tracks a deposit's depletion due to liquidations.
- *
  */
 contract StabilityPool is ReentrancyGuardUpgradeable, UUPSUpgradeable, TrinityBase, IStabilityPool {
 	using SafeERC20Upgradeable for IERC20Upgradeable;
