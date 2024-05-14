@@ -142,9 +142,9 @@ class DeploymentHelper {
 		await core.priceFeedTestnet.setPrice(core.erc20.address, dec(200, "ether"))
 		await core.priceFeedTestnet.setPrice(core.erc20B.address, dec(100, "ether"))
 
-		await core.adminContract.addNewCollateral(EMPTY_ADDRESS, dec(30, 18), 18)
-		await core.adminContract.addNewCollateral(core.erc20.address, dec(200, 18), 18)
-		await core.adminContract.addNewCollateral(core.erc20B.address, dec(30, 18), 18)
+		await core.adminContract.addNewCollateral(EMPTY_ADDRESS, 18)
+		await core.adminContract.addNewCollateral(core.erc20.address, 18)
+		await core.adminContract.addNewCollateral(core.erc20B.address, 18)
 
 		// Redemption are disabled by default; enable them for testing
 		await core.adminContract.setRedemptionBlockTimestamp(EMPTY_ADDRESS, 0)
