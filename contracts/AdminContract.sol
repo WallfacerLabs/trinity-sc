@@ -104,7 +104,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 
 	function addNewCollateral(
 		address _collateral,
-		uint256 _debtTokenGasCompensation, // the gas compensation is initialized here as it won't be changed
 		uint256 _decimals
 	) external override onlyTimelock {
 		require(collateralParams[_collateral].mcr == 0, "collateral already exists");
@@ -117,7 +116,6 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 			borrowingFee: BORROWING_FEE_DEFAULT,
 			ccr: CCR_DEFAULT,
 			mcr: MCR_DEFAULT,
-			debtTokenGasCompensation: _debtTokenGasCompensation,
 			minNetDebt: MIN_NET_DEBT_DEFAULT,
 			mintCap: MINT_CAP_DEFAULT,
 			redemptionFeeFloor: REDEMPTION_FEE_FLOOR_DEFAULT,

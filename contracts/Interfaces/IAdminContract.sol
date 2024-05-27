@@ -16,7 +16,6 @@ interface IAdminContract {
 		uint256 borrowingFee;
 		uint256 ccr;
 		uint256 mcr;
-		uint256 debtTokenGasCompensation; // Amount of debtToken to be locked in gas pool on opening vessels
 		uint256 minNetDebt; // Minimum amount of net debtToken a vessel must have
 		uint256 mintCap;
 		uint256 redemptionFeeFloor;
@@ -51,7 +50,7 @@ interface IAdminContract {
 
 	function _100pct() external view returns (uint256);
 
-	function addNewCollateral(address _collateral, uint256 _debtTokenGasCompensation, uint256 _decimals) external;
+	function addNewCollateral(address _collateral, uint256 _decimals) external;
 
 	function setCollateralParameters(
 		address _collateral,

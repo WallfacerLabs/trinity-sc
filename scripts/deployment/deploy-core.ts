@@ -313,7 +313,7 @@ export class CoreDeployer {
 			const decimals = 18
 			console.log(`[${coll.name}] AdminContract.addNewCollateral() ...`)
 			await this.sendAndWaitForTransaction(
-				this.coreContracts.adminContract.addNewCollateral(coll.address, coll.gasCompensation, decimals)
+				this.coreContracts.adminContract.addNewCollateral(coll.address, decimals)
 			)
 			console.log(`[${coll.name}] Collateral added @ ${coll.address}`)
 		}
