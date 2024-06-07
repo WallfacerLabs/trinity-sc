@@ -174,7 +174,7 @@ contract AdminContract is IAdminContract, UUPSUpgradeable, OwnableUpgradeable, A
 		public
 		override
 		onlyTimelock
-		safeCheck("CCR", _collateral, newCCR, 0, 10 ether) // 100% - 1,000%
+		safeCheck("CCR", _collateral, newCCR, 0, 10 ether) // 0% - 1,000%
 	{
 		CollateralParams storage collParams = collateralParams[_collateral];
 		uint256 oldCCR = collParams.ccr;
